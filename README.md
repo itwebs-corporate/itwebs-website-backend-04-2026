@@ -19,7 +19,7 @@ src/main/java/ru/itwebs/cms/
 
 Если `.env` отсутствует, скопируйте `.env.example` в `.env` и задайте сильные `POSTGRES_PASSWORD`, `ADMIN_PASSWORD` (от 16 символов) и `S3_SECRET_KEY`. Затем выполните `docker compose --env-file .env up --build -d`.
 
-API слушает `http://localhost:9999`. PostgreSQL слушает `15432` снаружи и внутри контейнера. MinIO API — `9000`, консоль — `9001`. Dockerfile собирает приложение без выполнения тестов.
+API слушает `http://localhost:9999`. PostgreSQL слушает `15432` снаружи и внутри контейнера. MinIO API доступен на `127.0.0.1:19000`, консоль — на `127.0.0.1:19001`; внутри сети Docker приложение использует `minio:9000`. Dockerfile собирает приложение без выполнения тестов.
 
 ## Swagger и авторизация
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEPLOY_DIR="${DEPLOY_DIR:-/srv/itwebs/backend}"
+DEPLOY_DIR="${DEPLOY_DIR:-/opt/itwebs/backend}"
 DEPLOY_BRANCH="${DEPLOY_BRANCH:-dev}"
 
 if [[ ! -d "$DEPLOY_DIR/.git" ]]; then

@@ -13,7 +13,7 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 SECRET = os.environ["WEBHOOK_SECRET"].encode("utf-8")
 REPOSITORY = os.environ.get("GITHUB_REPOSITORY", "itwebs-corporate/itwebs-website-backend-04-2026")
 DEPLOY_REF = os.environ.get("DEPLOY_REF", "refs/heads/dev")
-DEPLOY_SCRIPT = os.environ.get("DEPLOY_SCRIPT", "/srv/itwebs/backend/deploy/deploy.sh")
+DEPLOY_SCRIPT = os.environ.get("DEPLOY_SCRIPT", "/opt/itwebs/backend/deploy/deploy.sh")
 BIND = os.environ.get("WEBHOOK_BIND", "127.0.0.1")
 PORT = int(os.environ.get("WEBHOOK_PORT", "8765"))
 MAX_BODY = 1024 * 1024

@@ -4,7 +4,7 @@ This setup assumes an Ubuntu/Debian server with Docker Compose, Python 3, Nginx,
 
 ## 1. Prepare the server checkout
 
-Give the server read access to the private repository with a read-only GitHub deploy key. Clone the repository as `deploy` to `/srv/itwebs/backend`, and create `/srv/itwebs/backend/.env` from `.env.example` with production values. Keep `.env` out of Git and restrict it to the deploy user (`chmod 600`). Ensure `deploy` can run `docker compose` without a password prompt.
+Clone the repository as `deploy` to `/opt/itwebs/backend`, and create `/opt/itwebs/backend/.env` from `.env.example` with production values. Keep `.env` out of Git and restrict it to the deploy user (`chmod 600`). Ensure `deploy` can run `docker compose` without a password prompt.
 
 The checkout must use a Git remote named `origin`. The deployment script fetches `DEPLOY_BRANCH`, switches to the fetched commit, builds the application image, starts Compose, and waits for `/v3/api-docs` on port 9999. The Dockerfile skips tests during its Maven build.
 
@@ -17,8 +17,8 @@ WEBHOOK_SECRET=<64-hex-character-secret>
 GITHUB_REPOSITORY=itwebs-corporate/itwebs-website-backend-04-2026
 DEPLOY_REF=refs/heads/dev
 DEPLOY_BRANCH=dev
-DEPLOY_DIR=/srv/itwebs/backend
-DEPLOY_SCRIPT=/srv/itwebs/backend/deploy/deploy.sh
+DEPLOY_DIR=/opt/itwebs/backend
+DEPLOY_SCRIPT=/opt/itwebs/backend/deploy/deploy.sh
 WEBHOOK_BIND=127.0.0.1
 WEBHOOK_PORT=8765
 ```
