@@ -1,0 +1,18 @@
+[Unit]
+Description=ITWEBS GitHub webhook receiver
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=deploy
+Group=deploy
+WorkingDirectory=/srv/itwebs/backend
+EnvironmentFile=/etc/itwebs-webhook.env
+ExecStart=/usr/bin/python3 /srv/itwebs/backend/deploy/webhook_server.py
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

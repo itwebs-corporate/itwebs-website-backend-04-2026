@@ -43,3 +43,5 @@ Swagger UI: `http://localhost:9999/swagger-ui.html`. OpenAPI JSON: `http://local
 При первом запуске создаются текстовые данные и места для изображений по макету. Отдельные исходные картинки из Figma не предоставлены: загрузите их через `POST /api/admin/media`, затем укажите `mediaId` в нужном элементе контента через `PUT /api/admin/content/{id}`. Группа связывает поля одной карточки, а `sortOrder` задаёт порядок.
 
 Для продакшена нужны HTTPS, резервные копии PostgreSQL и бакета, а также миграции схемы вместо текущего `ddl-auto: update`.
+
+Настройка автоматического деплоя по GitHub webhook описана в [deploy/README.md](deploy/README.md).
