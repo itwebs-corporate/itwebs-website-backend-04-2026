@@ -1,5 +1,6 @@
 services:
   app:
+    container_name: itwebs-backend
     build: .
     restart: on-failure
     environment:
@@ -20,6 +21,7 @@ services:
       minio:
         condition: service_started
   postgres:
+    container_name: itwebs-postgres
     image: postgres:17
     command: ["postgres", "-p", "15432"]
     environment:
@@ -34,6 +36,7 @@ services:
       timeout: 3s
       retries: 20
   minio:
+    container_name: itwebs-minio
     image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
     command: server /data --console-address ":9001"
     environment:
