@@ -14,7 +14,7 @@ services:
       S3_BUCKET: itwebs-media
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-itwebs}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
-    ports: ["127.0.0.1:9999:9999"]
+    ports: ["0.0.0.0:9999:9999"]
     depends_on:
       postgres:
         condition: service_healthy
