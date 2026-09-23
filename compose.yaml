@@ -1,6 +1,7 @@
 services:
   app:
     container_name: itwebs-backend
+    image: itwebs-backend
     build: .
     restart: on-failure
     environment:
@@ -22,7 +23,10 @@ services:
         condition: service_started
   postgres:
     container_name: itwebs-postgres
-    image: postgres:17
+    image: itwebs-postgres
+    build:
+      context: .
+      dockerfile: docker/postgres.Dockerfile
     command: ["postgres", "-p", "15432"]
     environment:
       POSTGRES_DB: ${POSTGRES_DB:-itwebs}
@@ -37,7 +41,10 @@ services:
       retries: 20
   minio:
     container_name: itwebs-minio
-    image: quay.io/minio/minio:RELEASE.2025-09-07T16-13-09Z
+    image: itwebs-minio
+    build:
+      context: .
+      dockerfile: docker/minio.Dockerfile
     command: server /data --console-address ":9001"
     environment:
       MINIO_ROOT_USER: ${S3_ACCESS_KEY:-itwebs}

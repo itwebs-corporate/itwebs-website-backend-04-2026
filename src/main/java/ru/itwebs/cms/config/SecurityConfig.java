@@ -24,8 +24,8 @@ public class SecurityConfig {
     UserDetailsService users(@Value("${app.admin.email}") String email,
                              @Value("${app.admin.password}") String password,
                              PasswordEncoder encoder) {
-        if (email.isBlank() || password.length() < 16) {
-            throw new IllegalStateException("Set ADMIN_EMAIL and ADMIN_PASSWORD (at least 16 characters)");
+        if (email.isBlank() || password.length() < 6) {
+            throw new IllegalStateException("Set ADMIN_EMAIL and ADMIN_PASSWORD (at least 6 characters)");
         }
         return new InMemoryUserDetailsManager(User.withUsername(email)
                 .password(encoder.encode(password)).roles("ADMIN").build());
