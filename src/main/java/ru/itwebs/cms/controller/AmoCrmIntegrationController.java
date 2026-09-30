@@ -26,7 +26,7 @@ public class AmoCrmIntegrationController {
     @Operation(summary = "Получить ключи внешней интеграции", description = "Webhook amoCRM передаёт OAuth-реквизиты для временного state.")
     public ResponseEntity<Void> receiveSecrets(@Valid @RequestBody AmoCrmExternalCredentialsRequest request) {
         amoCrm.receiveExternalCredentials(request.client_id(), request.client_secret(), request.state());
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.ok().build();
     }
 
     @GetMapping(value = "/callback", produces = MediaType.TEXT_PLAIN_VALUE)
