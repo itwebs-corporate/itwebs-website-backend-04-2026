@@ -20,7 +20,7 @@ public class AdminLeadController {
     public AdminLeadController(LeadService leads) { this.leads = leads; }
 
     @GetMapping
-    @Operation(summary = "Список заявок", description = "В обратном хронологическом порядке.")
+    @Operation(summary = "Список заявок", description = "В обратном хронологическом порядке. amoCrmSyncStatus показывает состояние передачи в amoCRM; при ERROR текст ошибки находится в amoCrmSyncError.")
     public List<LeadResponse> list() { return leads.list().stream().map(LeadResponse::from).toList(); }
 
     @GetMapping("/{id}")

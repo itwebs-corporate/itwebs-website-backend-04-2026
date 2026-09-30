@@ -24,3 +24,11 @@ app:
     bucket: ${S3_BUCKET:itwebs-media}
     access-key: ${S3_ACCESS_KEY:}
     secret-key: ${S3_SECRET_KEY:}
+  amocrm:
+    account-url: ${AMOCRM_ACCOUNT_URL:https://itwebs.amocrm.ru}
+    redirect-uri: ${AMOCRM_REDIRECT_URI:https://itwebs.ru/api/integrations/amocrm/callback}
+    pipeline-name: ${AMOCRM_PIPELINE_NAME:Заявки с сайта}
+    status-name: ${AMOCRM_STATUS_NAME:Новая заявка}
+    responsible-user-id: ${AMOCRM_RESPONSIBLE_USER_ID:}
+    token-encryption-key: ${AMOCRM_TOKEN_ENCRYPTION_KEY:}
+    retry-delay-ms: ${AMOCRM_RETRY_DELAY_MS:60000}

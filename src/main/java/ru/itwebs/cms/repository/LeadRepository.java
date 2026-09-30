@@ -7,4 +7,5 @@ import java.util.List;
 
 public interface LeadRepository extends JpaRepository<Lead, Long> {
     List<Lead> findAllByOrderByCreatedAtDesc();
+    List<Lead> findTop50ByAmoCrmSyncStatusInOrderByCreatedAtAsc(List<String> statuses);
 }

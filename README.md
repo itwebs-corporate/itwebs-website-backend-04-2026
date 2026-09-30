@@ -25,6 +25,14 @@ API слушает `http://localhost:9999`. PostgreSQL слушает `15432` с
 
 Swagger UI: `http://localhost:9999/swagger-ui.html`. OpenAPI JSON: `http://localhost:9999/v3/api-docs`. Каждый REST-контроллер и его маршруты описаны в Swagger. Публичные операции доступны без пароля; для `/api/admin/**` используется HTTP Basic с `ADMIN_EMAIL` и `ADMIN_PASSWORD` из `.env`. В Swagger нажмите **Authorize** и введите эти данные.
 
+## Передача заявок в amoCRM
+
+После OAuth-подключения каждая новая заявка сайта создаёт сделку в воронке `Заявки с сайта` на этапе `Новая заявка` и связанный контакт с телефоном и/или почтой. Текст обращения и предпочтительный способ связи добавляются примечанием к сделке. Заявка в любом случае сначала сохраняется в PostgreSQL. Состояние отправки отображается в `GET /api/admin/leads`; ошибки повторяются автоматически.
+
+Используется внешняя интеграция amoCRM: её OAuth-реквизиты передаются кнопкой подключения на сервер, поэтому вручную задавать `AMOCRM_CLIENT_ID` и `AMOCRM_CLIENT_SECRET` не нужно. Добавьте в `.env` постоянный `AMOCRM_TOKEN_ENCRYPTION_KEY`, сгенерированный командой `openssl rand -base64 32`; не меняйте его после первого успешного подключения, иначе сохранённые токены невозможно будет расшифровать. Затем добавьте все amoCRM location из `deploy/nginx-location.conf.example` в HTTPS server block `itwebs.ru`, проверьте `nginx -t` и перезагрузите Nginx. После деплоя откройте `https://itwebs.ru/api/admin/integrations/amocrm/authorize`, войдите с HTTP Basic данными администратора, нажмите кнопку и разрешите доступ аккаунту `itwebs.amocrm.ru`. amoCRM передаст OAuth-реквизиты на `/api/integrations/amocrm/secrets`, затем вернётся на `/api/integrations/amocrm/callback`; backend сохранит их зашифрованными.
+
+Новые заявки, полученные до OAuth-подключения, автоматически не переносятся. Укажите другую воронку или этап через `AMOCRM_PIPELINE_NAME` и `AMOCRM_STATUS_NAME`. Назначение менеджера необязательно и задаётся через `AMOCRM_RESPONSIBLE_USER_ID`.
+
 ## Маршруты
 
 | Метод | Путь | Доступ | Назначение |

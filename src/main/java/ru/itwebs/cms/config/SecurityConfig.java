@@ -35,6 +35,7 @@ public class SecurityConfig {
     SecurityFilterChain security(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(auth -> auth
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
+                    .requestMatchers("/api/integrations/amocrm/callback", "/api/integrations/amocrm/secrets").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/content", "/api/content/**", "/api/media/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/leads").permitAll()
                     .anyRequest().hasRole("ADMIN"))

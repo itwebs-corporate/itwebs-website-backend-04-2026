@@ -9,7 +9,11 @@ import java.util.List;
 @Service
 public class LeadService {
     private final LeadRepository leads;
-    public LeadService(LeadRepository leads) { this.leads = leads; }
+    private final AmoCrmIntegrationService amoCrm;
+    public LeadService(LeadRepository leads, AmoCrmIntegrationService amoCrm) {
+        this.leads = leads;
+        this.amoCrm = amoCrm;
+    }
     public List<Lead> list() { return leads.findAllByOrderByCreatedAtDesc(); }
     public long count() { return leads.count(); }
     public Lead create(LeadRequest form) {
@@ -21,7 +25,10 @@ public class LeadService {
         lead.setEmail(form.email() == null ? null : form.email().trim());
         lead.setMessage(form.message().trim());
         lead.setContactMethod(form.contactMethod());
-        return leads.save(lead);
+        lead.setAmoCrmSyncStatus(amoCrm.isReady() ? "PENDING" : "WAITING_FOR_AUTH");
+        lead = leads.save(lead);
+        if ("PENDING".equals(lead.getAmoCrmSyncStatus())) amoCrm.sendLead(lead.getId());
+        return lead;
     }
     public Lead find(Long id) { return leads.findById(id).orElseThrow(); }
     public void setProcessed(Long id, boolean processed) {

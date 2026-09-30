@@ -15,6 +15,13 @@ services:
       S3_BUCKET: itwebs-media
       S3_ACCESS_KEY: ${S3_ACCESS_KEY:-itwebs}
       S3_SECRET_KEY: ${S3_SECRET_KEY}
+      AMOCRM_ACCOUNT_URL: ${AMOCRM_ACCOUNT_URL:-https://itwebs.amocrm.ru}
+      AMOCRM_REDIRECT_URI: ${AMOCRM_REDIRECT_URI:-https://itwebs.ru/api/integrations/amocrm/callback}
+      AMOCRM_PIPELINE_NAME: ${AMOCRM_PIPELINE_NAME:-Заявки с сайта}
+      AMOCRM_STATUS_NAME: ${AMOCRM_STATUS_NAME:-Новая заявка}
+      AMOCRM_RESPONSIBLE_USER_ID: ${AMOCRM_RESPONSIBLE_USER_ID:-}
+      AMOCRM_TOKEN_ENCRYPTION_KEY: ${AMOCRM_TOKEN_ENCRYPTION_KEY:-}
+      AMOCRM_RETRY_DELAY_MS: ${AMOCRM_RETRY_DELAY_MS:-60000}
     ports: ["0.0.0.0:9999:9999"]
     depends_on:
       postgres:
