@@ -19,6 +19,6 @@ public class AdminAmoCrmController {
     public AdminAmoCrmController(AmoCrmIntegrationService amoCrm) { this.amoCrm = amoCrm; }
 
     @GetMapping(value = "/authorize", produces = MediaType.TEXT_HTML_VALUE)
-    @Operation(summary = "Открыть подключение amoCRM", description = "Откройте в браузере с Basic Auth администратора, затем нажмите кнопку подключения.")
+    @Operation(summary = "Открыть  подключение amoCRM", description = "Откройте в браузере с Basic Auth администратора, затем нажмите кнопку подключения.")
     public String authorize() { return amoCrm.createAuthorizationPage(); }
 }
