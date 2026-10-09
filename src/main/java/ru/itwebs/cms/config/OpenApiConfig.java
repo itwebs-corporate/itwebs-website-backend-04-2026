@@ -8,6 +8,6 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 @OpenAPIDefinition(info = @Info(title = "ITWEBS CMS", version = "0.1.0",
-        description = "REST API контента, изображений и заявок. Административные операции используют HTTP Basic."))
+        description = "REST API ITWEBS CMS: готовые публичные данные страниц /api/pages/services и /api/pages/cases, контент, изображения и заявки. Административные операции используют HTTP Basic."))
 @SecurityScheme(name = "basicAuth", type = SecuritySchemeType.HTTP, scheme = "basic")
 public class OpenApiConfig { }

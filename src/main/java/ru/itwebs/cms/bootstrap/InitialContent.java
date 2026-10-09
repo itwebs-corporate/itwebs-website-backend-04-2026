@@ -6,12 +6,14 @@ import ru.itwebs.cms.repository.ContentRepository;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import java.util.HashSet;
 import java.util.Set;
 
 @Configuration
 public class InitialContent {
     @Bean
+    @Order(1)
     CommandLineRunner seed(ContentRepository repository) {
         return args -> {
             if (repository.existsBySectionNameAndItemKeyAndGroupName("_system", "desktopSeedV2", null)) return;

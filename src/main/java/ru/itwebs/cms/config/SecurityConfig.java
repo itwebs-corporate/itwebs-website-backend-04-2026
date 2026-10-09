@@ -36,7 +36,7 @@ public class SecurityConfig {
         return http.authorizeHttpRequests(auth -> auth
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/api/integrations/amocrm/callback", "/api/integrations/amocrm/secrets").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/content", "/api/content/**", "/api/media/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/content", "/api/content/**", "/api/pages/**", "/api/media/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/leads").permitAll()
                     .anyRequest().hasRole("ADMIN"))
                 .csrf(AbstractHttpConfigurer::disable)
