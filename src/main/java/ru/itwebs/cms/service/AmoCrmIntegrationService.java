@@ -167,7 +167,8 @@ public class AmoCrmIntegrationService {
                         "\nТелефон: " + valueOrDash(lead.getPhone()) +
                         "\nПочта: " + valueOrDash(lead.getEmail()) +
                         "\nПредпочтительный способ связи: " + valueOrDash(lead.getContactMethod()) +
-                        "\n\nСообщение:\n" + lead.getMessage());
+                        (lead.getMessage() == null || lead.getMessage().isBlank()
+                                ? "" : "\n\nСообщение:\n" + lead.getMessage()));
                 api("POST", "/api/v4/leads/" + lead.getAmoCrmLeadId() + "/notes", notes);
                 lead.setAmoCrmNoteSynced(true);
             }

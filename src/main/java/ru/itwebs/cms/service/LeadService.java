@@ -23,7 +23,7 @@ public class LeadService {
         lead.setName(form.name().trim());
         lead.setPhone(form.phone() == null ? null : form.phone().trim());
         lead.setEmail(form.email() == null ? null : form.email().trim());
-        lead.setMessage(form.message().trim());
+        lead.setMessage(form.message() == null ? "" : form.message().trim());
         lead.setContactMethod(form.contactMethod());
         lead.setAmoCrmSyncStatus(amoCrm.isReady() ? "PENDING" : "WAITING_FOR_AUTH");
         lead = leads.save(lead);
