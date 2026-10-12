@@ -27,6 +27,46 @@ public class PageService {
             "cases-page", "cases-page-filters", "cases-page-items", "cases-page-seo",
             "cases-page-seo-links", "project-cards");
 
+    private static final Set<String> OUTSTAFF = Set.of(
+            "outstaff-page", "outstaff-page-meta",
+            "outstaff-page-contact",
+            "outstaff-page-contact-grades",
+            "outstaff-page-contact-specialists",
+            "outstaff-page-filters",
+            "outstaff-page-process",
+            "outstaff-page-process-steps",
+            "outstaff-page-seo",
+            "outstaff-page-seo-items",
+            "outstaff-page-specialist-items",
+            "outstaff-page-specialists",
+            "outstaff-page-team",
+            "outstaff-page-team-overrides",
+            "outstaff-page-term-items",
+            "outstaff-page-terms",
+            "outstaff-page-use-case-items",
+            "outstaff-page-use-cases",
+            "team",
+            "team-members");
+
+    private static final Set<String> PRODUCT = Set.of(
+            "product-page", "product-page-meta",
+            "product-page-advantage-items",
+            "product-page-advantages",
+            "product-page-audience",
+            "product-page-audience-items",
+            "product-page-contact",
+            "product-page-control",
+            "product-page-control-items",
+            "product-page-demo",
+            "product-page-seo",
+            "product-page-stage-items",
+            "product-page-stages",
+            "product-page-use-case-items",
+            "product-page-use-cases",
+            "project-cards",
+            "services-page-seo",
+            "services-page-seo-topics");
+
     private final ContentService content;
 
     public PageService(ContentService content) {
@@ -39,6 +79,14 @@ public class PageService {
 
     public PageResponse cases() {
         return page("cases", CASES, true);
+    }
+
+    public PageResponse outstaff() {
+        return page("outstaff", OUTSTAFF);
+    }
+
+    public PageResponse product() {
+        return page("product", PRODUCT);
     }
 
     private PageResponse page(String slug, Set<String> pageSections) {
@@ -64,7 +112,7 @@ public class PageService {
                     String projectGroup = value(group, "projectGroup");
                     return new PageResponse.Group(group.groupName(), group.fields(), projects.get(projectGroup));
                 }).toList();
-            } else if (section.equals("services-page-project-items")) {
+            } else if (section.equals("services-page-project-items") || section.equals("product-page-use-case-items")) {
                 groups = groups.stream().map(group -> {
                     String projectGroup = value(group, "projectGroup");
                     return new PageResponse.Group(group.groupName(), group.fields(), projects.get(projectGroup));

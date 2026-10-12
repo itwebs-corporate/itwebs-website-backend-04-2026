@@ -22,6 +22,35 @@ public class PublicPageController {
         this.pages = pages;
     }
 
+    @GetMapping("/product")
+    @Operation(summary = "Получить страницу продукта",
+            description = "Контент Product: первый экран, преимущества, демонстрация ProBuilder, управление, примеры применения, этапы, аудитория и общие блоки. "
+                    + "SEO-метаданные: product-page-meta. Плавающая кнопка: product-page/floatingCta. "
+                    + "product-page-use-case-items содержит связанные проекты в project. Поля projectTitle и projectDescription переопределяют их отображение на Product. "
+                    + "Десктопная картинка берётся из project.fields.image, мобильная — из imageMobile; если она не задана, используется десктопная. "
+                    + "Надписи HTML-демонстрации находятся в product-page-demo. SEO-тексты общие с Services: services-page-seo и services-page-seo-topics. "
+                    + "CRUD полей: GET/POST /api/admin/content и GET/PUT/DELETE /api/admin/content/{id}. Загрузка изображений: POST /api/admin/media, привязка через mediaId.",
+            responses = @ApiResponse(responseCode = "200", description = "Страница продукта",
+                    content = @Content(schema = @Schema(implementation = PageResponse.class))))
+    public PageResponse product() {
+        return pages.product();
+    }
+
+    @GetMapping("/outstaff")
+    @Operation(summary = "Получить страницу аутстаффинга",
+            description = "Контент Outstaff: первый экран, ситуации, специалисты, фильтры, команда, этапы, оплата, форма и SEO. "
+                    + "Фильтры: outstaff-page-filters (key, label). Карточки: outstaff-page-specialist-items; filterN ссылается на key фильтра; all показывает все карточки. "
+                    + "Команда и фото: общие team и team-members; outstaff-page-team-overrides заменяет поля участника с тем же groupName. "
+                    + "SEO-метаданные: outstaff-page-meta. Плавающая кнопка: outstaff-page/floatingCta. photoAlt переопределяет alt фотографии. "
+                    + "Форма: общая contact с полями outstaff-page-contact и вариантами outstaff-page-contact-specialists/contact-grades (key, label). "
+                    + "Каждое поле содержит id для GET/PUT/DELETE /api/admin/content/{id}; создание через POST /api/admin/content. "
+                    + "Фотографии загружаются POST /api/admin/media и связываются через mediaId.",
+            responses = @ApiResponse(responseCode = "200", description = "Страница аутстаффинга",
+                    content = @Content(schema = @Schema(implementation = PageResponse.class))))
+    public PageResponse outstaff() {
+        return pages.outstaff();
+    }
+
     @GetMapping("/services")
     @Operation(
             summary = "Получить страницу услуг",

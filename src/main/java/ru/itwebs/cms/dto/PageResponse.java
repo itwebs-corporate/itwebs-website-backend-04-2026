@@ -17,7 +17,7 @@ public record PageResponse(
             String groupName,
             @Schema(description = "Поля группы, индексированные по itemKey. Значение каждого поля содержит type, value, href и медиа-ссылку.")
             Map<String, Field> fields,
-            @Schema(description = "Связанная карточка проекта для записи списка кейсов. Заполнена у cases-page-items и services-page-project-items.")
+            @Schema(description = "Связанная карточка проекта для записи списка кейсов. Заполнена у cases-page-items, services-page-project-items и product-page-use-case-items.")
             Group project) { }
 
     @Schema(name = "PageField", description = "Редактируемое текстовое, ссылочное или графическое поле контента.")
