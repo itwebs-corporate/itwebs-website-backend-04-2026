@@ -1,0 +1,7 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>ITWEBS — админка</title><link rel="stylesheet" href="/admin/admin.css"><script src="/admin/admin.js" defer></script></head>
+<body><header><strong>ITWEBS <span>Админка</span></strong><button id="logout" hidden>Выйти</button></header>
+<main><form id="login" class="panel login"><h1>Вход</h1><p>Логин и пароль администратора из настроек бэкенда.</p><label>Логин<input name="username" required autocomplete="username"></label><label>Пароль<input name="password" type="password" required autocomplete="current-password"></label><button class="primary">Войти</button></form>
+<div id="app" hidden><nav id="nav"></nav><div class="toolbar"><h1 id="title"></h1><button id="refresh">Обновить</button><button id="create" class="primary">Добавить</button></div><div id="filters"></div><div id="list"></div></div>
+<p id="notice" role="status" aria-live="polite"></p></main>
+<dialog id="editor"><form id="editForm"><div class="toolbar"><h2 id="editTitle"></h2><button type="button" id="close">Закрыть</button></div><div id="fields"></div><p id="editError" role="alert"></p><div class="toolbar"><button class="primary" id="save">Сохранить</button><button type="button" id="delete" class="danger">Удалить</button></div></form></dialog></body></html>

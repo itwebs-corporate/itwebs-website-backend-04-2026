@@ -29,7 +29,7 @@ The service file is an example for a server with a user and group both named `de
 
 ## 3. Expose HTTPS endpoint
 
-Place `deploy/nginx-location.conf.example` inside the existing HTTPS server block and reload Nginx after `nginx -t`. The public URL will be `https://<your-domain>/github-webhook`. Keep port 8765 closed externally; only Nginx needs to reach it.
+Configure your HTTPS reverse proxy to forward `/github-webhook` to `http://127.0.0.1:8765/github-webhook`, preserving the request body and headers. The public URL will be `https://<your-domain>/github-webhook`. Keep port 8765 closed externally; only Nginx needs to reach it.
 
 ## 4. Add the GitHub webhook
 

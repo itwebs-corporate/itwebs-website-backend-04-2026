@@ -34,6 +34,7 @@ public class SecurityConfig {
     @Bean
     SecurityFilterChain security(HttpSecurity http) throws Exception {
         return http.authorizeHttpRequests(auth -> auth
+                    .requestMatchers("/admin", "/admin/**").permitAll()
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/api/integrations/amocrm/callback", "/api/integrations/amocrm/secrets").permitAll()
                     .requestMatchers(HttpMethod.GET, "/api/content", "/api/content/**", "/api/pages/**", "/api/media/**", "/api/blog/**").permitAll()
