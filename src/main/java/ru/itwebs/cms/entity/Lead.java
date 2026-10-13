@@ -15,7 +15,8 @@ public class Lead {
     @Column(nullable = false) private Instant createdAt = Instant.now();
     private boolean processed;
     @Column(name = "amocrm_lead_id") private Long amoCrmLeadId;
-    @Column(name = "amocrm_note_synced") private boolean amoCrmNoteSynced;
+    // Older leads can contain NULL after Hibernate adds this column.
+    @Column(name = "amocrm_note_synced") private Boolean amoCrmNoteSynced = false;
     @Column(name = "amocrm_sync_status", length = 32) private String amoCrmSyncStatus;
     @Column(name = "amocrm_sync_error", length = 1000) private String amoCrmSyncError;
     public Long getId() { return id; }
@@ -36,7 +37,7 @@ public class Lead {
     public void setProcessed(boolean processed) { this.processed = processed; }
     public Long getAmoCrmLeadId() { return amoCrmLeadId; }
     public void setAmoCrmLeadId(Long amoCrmLeadId) { this.amoCrmLeadId = amoCrmLeadId; }
-    public boolean isAmoCrmNoteSynced() { return amoCrmNoteSynced; }
+    public boolean isAmoCrmNoteSynced() { return Boolean.TRUE.equals(amoCrmNoteSynced); }
     public void setAmoCrmNoteSynced(boolean amoCrmNoteSynced) { this.amoCrmNoteSynced = amoCrmNoteSynced; }
     public String getAmoCrmSyncStatus() { return amoCrmSyncStatus; }
     public void setAmoCrmSyncStatus(String amoCrmSyncStatus) { this.amoCrmSyncStatus = amoCrmSyncStatus; }
