@@ -5,6 +5,7 @@ import org.springframework.web.multipart.MultipartFile;
 import ru.itwebs.cms.entity.MediaAsset;
 import ru.itwebs.cms.repository.ContentRepository;
 import ru.itwebs.cms.repository.MediaRepository;
+import ru.itwebs.cms.repository.BlogArticleRepository;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import java.io.IOException;
@@ -18,8 +19,9 @@ public class MediaService {
     private final MediaRepository media;
     private final ContentRepository content;
     private final StorageService storage;
-    public MediaService(MediaRepository media, ContentRepository content, StorageService storage) {
-        this.media = media; this.content = content; this.storage = storage;
+    private final BlogArticleRepository blog;
+    public MediaService(MediaRepository media, ContentRepository content, StorageService storage, BlogArticleRepository blog) {
+        this.media = media; this.content = content; this.storage = storage; this.blog = blog;
     }
     public List<MediaAsset> list() { return media.findAll(); }
     public long count() { return media.count(); }
@@ -48,10 +50,14 @@ public class MediaService {
         asset.setAltText(altText.trim());
         media.save(asset);
     }
+    @org.springframework.transaction.annotation.Transactional
     public void delete(Long id) {
+        MediaAsset asset = media.findByIdForUpdate(id).orElseThrow();
         if (content.countByMediaId(id) > 0) throw new IllegalArgumentException("Изображение используется на странице");
-        MediaAsset asset = find(id);
-        storage.delete(asset);
+        if (blog.existsByImagesId(id)) throw new ru.itwebs.cms.blog.BlogConflictException("Изображение используется в статье блога");
         media.delete(asset);
+        // Check database references before removing the external object.
+        media.flush();
+        storage.delete(asset);
     }
 }

@@ -22,6 +22,16 @@ public class PublicPageController {
         this.pages = pages;
     }
 
+    @GetMapping("/blog")
+    @Operation(summary = "Редактируемый контент страницы блога",
+            description = "Первый экран и подписи: blog-page; сменяемые слова заголовка: blog-page-title-words (word, порядок sortOrder); SEO-метаданные: blog-page-meta; нижний SEO-блок: blog-page-seo и blog-page-seo-items. Общие header/contact/footer включены. CRUD каждого поля: /api/admin/content. Категории: /api/blog/categories; карточки: /api/blog/articles.")
+    public PageResponse blog() { return pages.blog(); }
+
+    @GetMapping("/blog-article")
+    @Operation(summary = "Общие блоки шаблона статьи",
+            description = "blog-article-page: заголовки рекомендаций и услуг, подписи времени чтения, плавающая кнопка. blog-article-page-seo и blog-article-page-seo-topics: нижний SEO-блок. blog-article-service-items: serviceGroup ссылается на groupName в services-page-catalog, порядок sortOrder. Общие header/contact/footer включены. CRUD полей: /api/admin/content. Данные конкретной статьи: /api/blog/articles/{slug}; рекомендации: /api/blog/articles/{slug}/related.")
+    public PageResponse blogArticle() { return pages.blogArticle(); }
+
     @GetMapping("/product")
     @Operation(summary = "Получить страницу продукта",
             description = "Контент Product: первый экран, преимущества, демонстрация ProBuilder, управление, примеры применения, этапы, аудитория и общие блоки. "
@@ -54,7 +64,9 @@ public class PublicPageController {
     @GetMapping("/services")
     @Operation(
             summary = "Получить страницу услуг",
-            description = "Возвращает готовый контент страницы услуг одним ответом: секции, каталог, этапы, задачи, модели, общие блоки и проекты. Карточки услуг и контент сгруппированы по groupName; поля внутри fields доступны по itemKey. У каждой записи fields есть id для обновления через админский CRUD. Изображения возвращают mediaUrl.",
+            description = "Возвращает готовый контент страницы услуг одним ответом: секции, каталог, этапы, задачи, модели, общие блоки и проекты. Карточки услуг и контент сгруппированы по groupName; поля внутри fields доступны по itemKey. У каждой записи fields есть id для обновления через админский CRUD. Изображения возвращают mediaUrl. "
+                    + "Сменяемые слова заголовка: services-page-title-words, группы word-1/word-2/word-3, поле word (разработки, поддержки, автоматизации), порядок sortOrder. "
+                    + "В services-page группа automation содержит полный title для автоматизации. services-page-seo: поле eyebrow в группе с groupName=null, значение «Для поискового интента».",
             responses = @ApiResponse(responseCode = "200", description = "Страница услуг",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = PageResponse.class),
@@ -70,6 +82,14 @@ public class PublicPageController {
                                             },
                                             "project": null
                                           }
+                                        ],
+                                        "services-page-title-words": [
+                                          {"groupName": "word-1", "fields": {"word": {"id": 100, "type": "TEXT", "label": "Сменяемое слово заголовка", "value": "разработки", "sortOrder": 100}}, "project": null},
+                                          {"groupName": "word-2", "fields": {"word": {"id": 101, "type": "TEXT", "label": "Сменяемое слово заголовка", "value": "поддержки", "sortOrder": 101}}, "project": null},
+                                          {"groupName": "word-3", "fields": {"word": {"id": 102, "type": "TEXT", "label": "Сменяемое слово заголовка", "value": "автоматизации", "sortOrder": 102}}, "project": null}
+                                        ],
+                                        "services-page-seo": [
+                                          {"groupName": null, "fields": {"eyebrow": {"id": 104, "type": "TEXT", "label": "Надзаголовок SEO-блока", "value": "Для поискового интента", "sortOrder": 104}}, "project": null}
                                         ],
                                         "services-page-catalog": [
                                           {
@@ -98,7 +118,8 @@ public class PublicPageController {
     @GetMapping("/cases")
     @Operation(
             summary = "Получить страницу кейсов",
-            description = "Возвращает готовый контент страницы кейсов одним ответом. Фильтры перечислены в cases-page-filters. Каждая группа cases-page-items содержит связанные фильтры (filter1, filter2, ...), а поле project — полную карточку проекта с title, category, description, details и image. Кейс может иметь несколько фильтров; для фильтрации сравнивайте значения filterN с полем key фильтра. Повторяющиеся визуальные копии одной карточки возвращаются как одна запись.",
+            description = "Возвращает готовый контент страницы кейсов одним ответом. Фильтры перечислены в cases-page-filters. Каждая группа cases-page-items содержит связанные фильтры (filter1, filter2, ...), а поле project — полную карточку проекта с title, category, description, details и image. Кейс может иметь несколько фильтров; для фильтрации сравнивайте значения filterN с полем key фильтра. Повторяющиеся визуальные копии одной карточки возвращаются как одна запись. "
+                    + "cases-page-seo: поле eyebrow в группе с groupName=null, значение «Для поискового интента». Поле содержит id для редактирования через PUT /api/admin/content/{id}.",
             responses = @ApiResponse(responseCode = "200", description = "Страница кейсов",
                     content = @Content(mediaType = "application/json",
                             schema = @Schema(implementation = PageResponse.class),
@@ -106,6 +127,9 @@ public class PublicPageController {
                                     {
                                       "page": "cases",
                                       "sections": {
+                                        "cases-page-seo": [
+                                          {"groupName": null, "fields": {"eyebrow": {"id": 105, "type": "TEXT", "label": "Надзаголовок SEO-блока", "value": "Для поискового интента", "sortOrder": 105}}, "project": null}
+                                        ],
                                         "cases-page-filters": [
                                           {"groupName": "filter-mobile", "fields": {"key": {"id": 30, "type": "TEXT", "label": "key", "value": "mobile", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 30}, "label": {"id": 31, "type": "TEXT", "label": "label", "value": "Mobile", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 31}}, "project": null},
                                           {"groupName": "filter-ai", "fields": {"key": {"id": 32, "type": "TEXT", "label": "key", "value": "ai", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 32}, "label": {"id": 33, "type": "TEXT", "label": "label", "value": "AI", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 33}}, "project": null}

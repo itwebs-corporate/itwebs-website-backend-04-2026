@@ -10,6 +10,15 @@ import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler({ru.itwebs.cms.blog.BlogConflictException.class,
+            org.springframework.dao.DataIntegrityViolationException.class,
+            org.springframework.dao.OptimisticLockingFailureException.class})
+    ProblemDetail conflict(RuntimeException error) {
+        String message = error instanceof ru.itwebs.cms.blog.BlogConflictException
+                ? error.getMessage() : "Конфликт данных: запись изменена, slug занят или запись используется";
+        return problem(HttpStatus.CONFLICT, message);
+    }
+
     @ExceptionHandler(NoSuchElementException.class)
     ProblemDetail notFound(NoSuchElementException error) {
         return problem(HttpStatus.NOT_FOUND, error.getMessage());
@@ -24,6 +33,16 @@ public class ApiExceptionHandler {
     ProblemDetail validation(MethodArgumentNotValidException error) {
         String message = error.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         return problem(HttpStatus.BAD_REQUEST, message);
+    }
+
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    ProblemDetail unreadableBody(org.springframework.http.converter.HttpMessageNotReadableException error) {
+        return problem(HttpStatus.BAD_REQUEST, "Некорректный JSON: проверьте типы полей и формат дат");
+    }
+
+    @ExceptionHandler(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException.class)
+    ProblemDetail invalidParameter(org.springframework.web.method.annotation.MethodArgumentTypeMismatchException error) {
+        return problem(HttpStatus.BAD_REQUEST, "Некорректный параметр: " + error.getName());
     }
 
     @ExceptionHandler(MaxUploadSizeExceededException.class)

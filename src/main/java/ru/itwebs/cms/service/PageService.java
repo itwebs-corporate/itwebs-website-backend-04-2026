@@ -17,7 +17,7 @@ public class PageService {
     private static final Set<String> SHARED = Set.of(
             "header", "contact", "footer", "footer-navigation", "footer-services", "footer-regions");
     private static final Set<String> SERVICES = Set.of(
-            "services-page", "services-page-catalog", "services-page-stacks",
+            "services-page", "services-page-title-words", "services-page-catalog", "services-page-stacks",
             "services-page-stack-items", "services-page-process", "services-page-process-steps",
             "services-page-tasks", "services-page-audience", "services-page-audiences",
             "services-page-cooperation", "services-page-cooperation-models",
@@ -83,6 +83,15 @@ public class PageService {
 
     public PageResponse outstaff() {
         return page("outstaff", OUTSTAFF);
+    }
+
+    public PageResponse blog() {
+        return page("blog", Set.of("blog-page", "blog-page-title-words", "blog-page-meta", "blog-page-seo", "blog-page-seo-items"));
+    }
+
+    public PageResponse blogArticle() {
+        return page("blog-article", Set.of("blog-article-page", "blog-article-page-seo", "blog-article-page-seo-topics",
+                "blog-article-service-items", "services-page-catalog"));
     }
 
     public PageResponse product() {
