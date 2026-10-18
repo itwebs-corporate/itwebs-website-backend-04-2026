@@ -2,9 +2,12 @@
 const $ = id => document.getElementById(id);
 const catalogs={services:'services',projects:'cases',specialists:'specialists',team:'team'};
 const categoryKinds={serviceCategories:'services',caseCategories:'cases',specialistCategories:'specialists',teamCategories:'team'};
-const sections = {pages:'Страницы',services:'Услуги',serviceCategories:'Категории услуг',projects:'Кейсы',caseCategories:'Категории кейсов',specialists:'Специалисты',specialistCategories:'Категории специалистов',team:'Команда',teamCategories:'Категории команды',articles:'Статьи',categories:'Категории статей',media:'Картинки',leads:'Заявки'};
+const componentKinds={serviceFaq:'faq',serviceStack:'stack',serviceProcess:'process',serviceTasks:'task',serviceAudience:'audience',serviceCooperation:'cooperation'};
+const componentLabels={serviceFaq:'FAQ услуг',serviceStack:'Технологии услуг',serviceProcess:'Процессы услуг',serviceTasks:'Задачи услуг',serviceAudience:'Аудитории услуг',serviceCooperation:'Модели сотрудничества'};
+const sections = {pages:'Страницы',services:'Услуги',serviceCategories:'Категории услуг',...componentLabels,projects:'Кейсы',caseCategories:'Категории кейсов',specialists:'Специалисты',specialistCategories:'Категории специалистов',team:'Команда',teamCategories:'Категории команды',articles:'Статьи',categories:'Категории статей',media:'Картинки',leads:'Заявки'};
 let auth='', section='pages', rows=[], media=[], categories=[], page=0, totalPages=0, current=null, busy=false, generation=0;
-const path = kind => catalogs[kind]?'/api/admin/catalog/'+catalogs[kind]:categoryKinds[kind]?'/api/admin/catalog/'+categoryKinds[kind]+'/categories':'/api/admin/' + (['articles','categories'].includes(kind)?'blog/':'') + kind;
+const path = kind => componentKinds[kind]?'/api/admin/service-components/'+componentKinds[kind]:catalogs[kind]?'/api/admin/catalog/'+catalogs[kind]:categoryKinds[kind]?'/api/admin/catalog/'+categoryKinds[kind]+'/categories':'/api/admin/' + (['articles','categories'].includes(kind)?'blog/':'') + kind;
+const isPaginated = kind => kind==='articles'||!!catalogs[kind]||!!componentKinds[kind];
 function el(tag,text,cls){const n=document.createElement(tag);if(text!==undefined)n.textContent=text;if(cls)n.className=cls;return n;}
 function button(text,action){const b=el('button',text);b.type='button';b.onclick=action;return b;}
 function notify(message,success=false){$('notice').textContent=message;$('notice').className=success?'success':'';}
@@ -14,9 +17,33 @@ $('logout').onclick=()=>{generation++;auth='';rows=[];media=[];categories=[];cur
 for(const [key,title] of Object.entries(sections))$('nav').append(button(title,async()=>{section=key;page=0;await load();}));
 $('refresh').onclick=()=>load();$('create').onclick=()=>openEditor();$('close').onclick=()=>{if(!busy)$('editor').close();};
 $('editor').addEventListener('cancel',e=>{if(busy)e.preventDefault();});
-async function load(){const ticket=++generation,kind=section;notify('');$('list').textContent='Загрузка…';$('title').textContent=sections[kind];$('create').hidden=['leads','pages'].includes(kind);[...$('nav').children].forEach((b,i)=>b.classList.toggle('active',Object.keys(sections)[i]===kind));try{const paginated=kind==='articles'||!!catalogs[kind];const data=await api(path(kind)+(paginated?`?page=${page}&size=20`:''));if(ticket!==generation)return;rows=paginated?data.items:data;totalPages=data.totalPages||0;filters();render();}catch(e){if(ticket===generation){$('list').textContent='Не удалось загрузить данные.';notify(e.message);}}}
+async function load(){const ticket=++generation,kind=section;notify('');$('list').textContent='Загрузка…';$('title').textContent=sections[kind];$('create').hidden=['leads','pages'].includes(kind);[...$('nav').children].forEach((b,i)=>b.classList.toggle('active',Object.keys(sections)[i]===kind));try{const paginated=isPaginated(kind);const data=await api(path(kind)+(paginated?`?page=${page}&size=20`:''));if(ticket!==generation)return;rows=paginated?data.items:data;totalPages=data.totalPages||0;filters();render();}catch(e){if(ticket===generation){$('list').textContent='Не удалось загрузить данные.';notify(e.message);}}}
 function filters(){const box=$('filters');box.replaceChildren();const search=el('input');search.placeholder='Поиск';search.id='search';search.oninput=render;box.append(search);}
-function render(){const root=$('list');root.replaceChildren();const q=($('search')?.value||'').toLowerCase();const visible=rows.filter(r=>JSON.stringify(r).toLowerCase().includes(q));if(!visible.length)root.append(el('p','Пока ничего нет.','empty'));for(const r of visible){const card=el('div',undefined,'card');if(section==='media'){const img=el('img');img.src=r.url;img.alt=r.altText||'';card.append(img);}const body=el('div',undefined,'body');let title,description;if(section==='pages'){title=r.title;description=`${r.path} · ${r.published?'Опубликовано':'Скрыто'}`;}else if(catalogs[section]){title=r.title;description=`${r.published?'Опубликовано':'Черновик'} · ${r.link}\n${r.description||''}`;}else if(section==='media'){title=r.originalName;description=`${r.altText||'Без описания'} · ${Math.round(r.sizeBytes/1024)} КБ`;}else if(section==='leads'){title=r.name;description=`${r.processed?'Обработана':'Новая'} · ${new Date(r.createdAt).toLocaleString('ru-RU')}\n${r.phone||''} ${r.email||''}\n${r.message||''}`;}else if(section==='articles'){title=r.title;description=`${r.status==='DRAFT'?'Черновик':'Публикация'} · ${r.slug}`;}else{title=r.name;description=r.slug;}body.append(el('strong',title),el('p',description));card.append(body,button(section==='leads'?'Открыть':'Редактировать',()=>section==='pages'?openPage(r.slug):openEditor(r.id)));root.append(card);}if(section==='articles'||catalogs[section]){const p=el('div',undefined,'pager'),prev=button('← Назад',()=>{page--;load();}),next=button('Далее →',()=>{page++;load();});prev.disabled=page===0;next.disabled=page+1>=totalPages;p.append(prev,el('span',`Страница ${page+1} из ${Math.max(1,totalPages)}`),next);root.append(p);}}
+function render(){
+    const root=$('list');root.replaceChildren();
+    const query=($('search')?.value||'').toLowerCase();
+    const visible=rows.filter(row=>JSON.stringify(row).toLowerCase().includes(query));
+    if(!visible.length)root.append(el('p','Пока ничего нет.','empty'));
+    for(const row of visible){
+        const card=el('div',undefined,'card');
+        if(section==='media'){const image=el('img');image.src=row.url;image.alt=row.altText||'';card.append(image);}
+        const body=el('div',undefined,'body');let title,description;
+        if(section==='pages'){title=row.title;description=`${row.path} · ${row.published?'Опубликовано':'Скрыто'}`;}
+        else if(componentKinds[section]){title=row.title;description=[row.description,row.price].filter(Boolean).join('\n');}
+        else if(catalogs[section]){title=row.title;description=`${row.published?'Опубликовано':'Черновик'} · ${row.link}\n${row.description||''}`;}
+        else if(section==='media'){title=row.originalName;description=`${row.altText||'Без описания'} · ${Math.round(row.sizeBytes/1024)} КБ`;}
+        else if(section==='leads'){title=row.name;description=`${row.processed?'Обработана':'Новая'} · ${new Date(row.createdAt).toLocaleString('ru-RU')}\n${row.phone||''} ${row.email||''}\n${row.message||''}`;}
+        else if(section==='articles'){title=row.title;description=`${row.status==='DRAFT'?'Черновик':'Публикация'} · ${row.slug}`;}
+        else{title=row.name;description=row.slug;}
+        body.append(el('strong',title),el('p',description));
+        card.append(body,button(section==='leads'?'Открыть':'Редактировать',()=>section==='pages'?openPage(row.slug):openEditor(row.id)));root.append(card);
+    }
+    if(isPaginated(section)){
+        const pager=el('div',undefined,'pager'),previous=button('← Назад',()=>{page--;load();}),next=button('Далее →',()=>{page++;load();});
+        previous.disabled=page===0;next.disabled=page+1>=totalPages;
+        pager.append(previous,el('span',`Страница ${page+1} из ${Math.max(1,totalPages)}`),next);root.append(pager);
+    }
+}
 function field(name,title,value='',type='text',options){const label=el('label',title);let input;if(options){input=el('select');for(const [v,t] of options)input.append(new Option(t,v));input.value=value??'';}else{input=el(type==='textarea'?'textarea':'input');if(type!=='textarea')input.type=type;if(type==='checkbox')input.checked=!!value;else input.value=value??'';}input.name=name;label.append(input);$('fields').append(label);return input;}
 function imageField(name,title,value){
     const options=[['','Не выбрано'],...media.map(m=>[String(m.id),m.originalName+' — '+m.altText])];
@@ -54,7 +81,7 @@ function attachImageUpload(select,onUploaded=()=>{}){
     };
 }
 function required(input,max){input.required=true;if(max)input.maxLength=max;return input;}
-async function openEditor(id){const kind=section,ticket=generation;if(catalogs[kind])return openCatalog(kind,id);if(categoryKinds[kind])return openCategory(kind,id);notify('');try{const data=id?await api(path(kind)+'/'+id):{};if(kind!==section||ticket!==generation||!auth)return;current={kind,id,data};$('fields').replaceChildren();$('editError').textContent='';$('editTitle').textContent=(id?'Редактировать: ':'Добавить: ')+sections[kind];$('delete').hidden=!id;$('save').textContent=kind==='media'&&!id?'Загрузить':'Сохранить';
+async function openEditor(id){const kind=section,ticket=generation;if(componentKinds[kind])return openComponent(kind,id);if(catalogs[kind])return openCatalog(kind,id);if(categoryKinds[kind])return openCategory(kind,id);notify('');try{const data=id?await api(path(kind)+'/'+id):{};if(kind!==section||ticket!==generation||!auth)return;current={kind,id,data};$('fields').replaceChildren();$('editError').textContent='';$('editTitle').textContent=(id?'Редактировать: ':'Добавить: ')+sections[kind];$('delete').hidden=!id;$('save').textContent=kind==='media'&&!id?'Загрузить':'Сохранить';
 if(kind==='media'){if(!id){const f=required(field('file','Файл (до 15 МБ)','','file'));f.accept='image/jpeg,image/png,image/webp,image/gif,image/avif';}required(field('altText','Описание картинки',data.altText),255);if(id){const img=el('img');img.src=data.url;img.alt=data.altText;img.style.maxWidth='100%';$('fields').append(img);}}
 if(kind==='categories'){required(field('name','Название',data.name),80);const slug=required(field('slug','Адрес: латиница, цифры и дефисы',data.slug),80);slug.pattern='[a-z0-9]+(?:-[a-z0-9]+)*';field('sortOrder','Порядок',data.sortOrder||0,'number').min=0;}
 if(kind==='leads'){for(const [key,title] of Object.entries({name:'Имя',phone:'Телефон',email:'Почта',message:'Сообщение',contactMethod:'Как связаться',specialist:'Специалист',grades:'Грейды',sourcePage:'Страница заявки',createdAt:'Дата',amoCrmSyncStatus:'Передача в amoCRM',amoCrmLeadId:'Номер сделки',amoCrmSyncError:'Ошибка amoCRM'})){const line=el('p');const value=Array.isArray(data[key])?data[key].join(', '):data[key];line.append(el('strong',title+': '),el('span',value||'—'));$('fields').append(line);}field('processed','Заявка обработана',data.processed,'checkbox');}
@@ -152,6 +179,64 @@ async function allEntries(kind){
     do{result=await api('/api/admin/catalog/'+kind+'?page='+index+'&size=100');items.push(...result.items);index++;}while(index<result.totalPages);
     return items;
 }
+async function allComponents(kind){
+    const items=[];let index=0,result;
+    do{result=await api('/api/admin/service-components/'+kind+'?page='+index+'&size=100');items.push(...result.items);index++;}while(index<result.totalPages);
+    return items;
+}
+async function componentChoices(){
+    const definitions={faq:'faq',stack:'stack',process:'process',tasks:'task',audience:'audience',cooperation:'cooperation'};
+    const values=await Promise.all(Object.values(definitions).map(allComponents));
+    return Object.fromEntries(Object.keys(definitions).map((key,index)=>[key,values[index]]));
+}
+async function openComponent(kind,id){
+    const ticket=generation;
+    try{
+        const [data,images]=await Promise.all([id?api(path(kind)+'/'+id):{},componentKinds[kind]==='stack'?api(path('media')):[]]);
+        if(ticket!==generation||section!==kind||!auth)return;
+        media=images;beginEditor(kind,id,data,(id?'Редактировать: ':'Добавить: ')+sections[kind]);
+        const type=componentKinds[kind];
+        $('fields').append(el('p','Общий элемент. Его изменение обновит все услуги, в которых он выбран. Индивидуальные переопределения сохраняются.'));
+        required(field('title',type==='faq'?'Вопрос':'Название',data.title),type==='faq'?1000:type==='stack'?120:500);
+        if(type==='stack')imageField('mediaId','Логотип',data.image?.id);
+        else{
+            const description=field('description',type==='faq'?'Ответ':'Описание',data.description,'textarea');description.maxLength=20000;
+            if(type==='faq')description.required=true;
+            else field('price','Стоимость (необязательно)',data.price).maxLength=240;
+        }
+        field('sortOrder','Порядок в справочнике',data.sortOrder||0,'number').min=0;showEditor();
+    }catch(error){notify(error.message);}
+}
+function componentSelectionEditor(parent,title,kind,choices,initial=[]){
+    const container=el('section',undefined,'repeat-editor'),list=el('div');
+    container.append(el('h3',title),el('p','Выберите общий элемент. Изменить или создать его можно в соответствующем разделе справочников.'),list);parent.append(container);
+    function add(data={}){
+        if(list.children.length>=100)return;
+        const row=el('div',undefined,'block');list.append(row);
+        const select=scalar(row,'Элемент справочника',data.componentId,'select',[['','Выберите элемент'],...choices.map(item=>[item.id,item.title])]);select.required=true;
+        const preview=el('p');row.append(preview);
+        const show=()=>{const item=choices.find(item=>String(item.id)===select.value);preview.textContent=item?[item.description,item.price].filter(Boolean).join('\n'):'';};select.onchange=show;show();
+        const details=el('details'),summary=el('summary','Индивидуальный текст для этой услуги');details.append(summary);row.append(details);
+        const fields={};
+        const definitions=[['title',kind==='faq'?'Вопрос':'Название',kind==='faq'?1000:kind==='stack'?120:500]];
+        if(kind!=='stack')definitions.push(['description',kind==='faq'?'Ответ':'Описание',20000]);
+        if(kind!=='stack'&&kind!=='faq')definitions.push(['price','Стоимость',240]);
+        for(const [key,label,maximum] of definitions){
+            const original=data.override?.[key];
+            const enabled=scalar(details,'Переопределить: '+label,original!==null&&original!==undefined,'checkbox');
+            const input=scalar(details,label,original,key==='description'?'textarea':'text');input.maxLength=maximum;
+            const toggle=()=>{input.disabled=!enabled.checked;input.required=enabled.checked&&(key==='title'||kind==='faq'&&key==='description');};enabled.onchange=toggle;toggle();fields[key]={enabled,input};
+        }
+        details.open=!!data.override;
+        row.read=()=>{
+            const override=Object.fromEntries(Object.entries(fields).filter(([,value])=>value.enabled.checked).map(([key,value])=>[key,value.input.value]));
+            return {componentId:Number(select.value),override:Object.keys(override).length?override:null};
+        };
+        const controls=el('div',undefined,'toolbar');controls.append(button('↑',()=>{if(row.previousElementSibling)list.insertBefore(row,row.previousElementSibling);}),button('↓',()=>{if(row.nextElementSibling)list.insertBefore(row.nextElementSibling,row);}),button('Убрать',()=>row.remove()));row.append(controls);
+    }
+    initial.forEach(add);container.append(button('+ Выбрать элемент',()=>add()));
+    return ()=>[...list.children].map(row=>row.read());
+}
 async function openCategory(kind,id){
     const ticket=generation;
     try{
@@ -166,7 +251,7 @@ async function openCategory(kind,id){
 async function openCatalog(kind,id){
     const ticket=generation;notify('Загружаем форму…');
     try{
-        const [data,images,choices,examples]=await Promise.all([id?api(path(kind)+'/'+id):{},api(path('media')),api(path(kind)+'/categories'),kind==='services'?allEntries('cases'):[]]);
+        const [data,images,choices,examples,dictionaries]=await Promise.all([id?api(path(kind)+'/'+id):{},api(path('media')),api(path(kind)+'/categories'),kind==='services'?allEntries('cases'):[],kind==='services'?componentChoices():{}]);
         if(ticket!==generation||section!==kind||!auth)return;
         media=images;
         const editing=beginEditor(kind,id,data,(id?'Редактировать: ':'Добавить: ')+sections[kind]);
@@ -195,13 +280,10 @@ async function openCatalog(kind,id){
             const body=data.service||{};
             const headers=detailsFields(body,[['examplesTitle','Заголовок примеров работ'],['faqTitle','Заголовок FAQ'],['stackTitle','Заголовок стека'],['stackDescription','Описание стека','textarea'],['processTitle','Заголовок процессов'],['tasksTitle','Заголовок задач'],['audienceTitle','Заголовок аудитории'],['audienceDescription','Описание аудитории','textarea'],['cooperationTitle','Заголовок моделей сотрудничества']]);
             const caseIds=repeatEditor($('fields'),'Примеры работ',[['caseId','Кейс','number', [['','Выберите кейс'],...examples.map(item=>[item.id,item.title+(item.published?'':' (черновик)')])]]],(data.examples||[]).map(item=>({caseId:item.id})));
-            const faq=repeatEditor($('fields'),'FAQ',[['question','Вопрос','required'],['answer','Ответ','requiredTextarea']],body.faq||[]);
-            const stack=repeatEditor($('fields'),'Стек',[['name','Технология','required'],['mediaId','Логотип','image']],body.stack||[]);
-            const process=repeatEditor($('fields'),'Процессы',itemDefinitions,body.process||[]);
-            const tasks=repeatEditor($('fields'),'Решаемые задачи',itemDefinitions,body.tasks||[]);
-            const audience=repeatEditor($('fields'),'Кому подходит услуга',itemDefinitions,body.audience||[]);
-            const cooperation=repeatEditor($('fields'),'Модели сотрудничества',[...itemDefinitions,['price','Стоимость']],body.cooperation||[]);
-            editing.read.body=()=>({service:{...headers(),faq:faq(),stack:stack(),process:process(),tasks:tasks(),audience:audience(),cooperation:cooperation()},caseIds:caseIds().map(item=>item.caseId)});
+            const selected=data.serviceSelections||{};
+            const readers={};
+            for(const [key,label,type] of [['faq','FAQ','faq'],['stack','Стек','stack'],['process','Процессы','process'],['tasks','Решаемые задачи','task'],['audience','Кому подходит услуга','audience'],['cooperation','Модели сотрудничества','cooperation']])readers[key]=componentSelectionEditor($('fields'),label,type,dictionaries[key],selected[key]||[]);
+            editing.read.body=()=>({service:{...headers(),faq:[],stack:[],process:[],tasks:[],audience:[],cooperation:[]},serviceSelections:Object.fromEntries(Object.entries(readers).map(([key,read])=>[key,read()])),caseIds:caseIds().map(item=>item.caseId)});
         }else if(kind==='projects'){
             const body=data.project||{};
             const headers=detailsFields(body,[['headline','Заголовок детальной страницы'],['client','Клиент'],['challenge','Задача','textarea'],['solution','Решение','textarea'],['result','Результат','textarea']]);
@@ -309,12 +391,15 @@ async function openCollection(slug,collection){
 const originalSubmit=$('editForm').onsubmit;
 $('editForm').onsubmit=async event=>{
     const editing=current;
-    if(!editing||(!catalogs[editing.kind]&&!categoryKinds[editing.kind]&&!['pages','pageBlock','pageCollection'].includes(editing.kind)))return originalSubmit(event);
+    if(!editing||(!componentKinds[editing.kind]&&!catalogs[editing.kind]&&!categoryKinds[editing.kind]&&!['pages','pageBlock','pageCollection'].includes(editing.kind)))return originalSubmit(event);
     event.preventDefault();if(busy)return;
     const {kind,id,data}=editing,form=values();let url,body,method=id?'PUT':'POST';
     lock(true);$('editError').textContent='';
     try{
-        if(catalogs[kind]){
+        if(componentKinds[kind]){
+            body={title:form.title,description:form.description??null,price:form.price||null,mediaId:form.mediaId?Number(form.mediaId):null,sortOrder:Number(form.sortOrder)};
+            if(id)body.version=data.version;url=path(kind)+(id?'/'+id:'');
+        }else if(catalogs[kind]){
             body={title:form.title,slug:form.slug,description:form.description,price:form.price||null,seoTitle:form.seoTitle,seoDescription:form.seoDescription,published:form.published,sortOrder:Number(form.sortOrder),coverMediaId:form.coverMediaId?Number(form.coverMediaId):null,categoryIds:form.categoryIds,caseIds:[],...editing.read.body()};
             body.mobileCoverMediaId=form.mobileCoverMediaId?Number(form.mobileCoverMediaId):null;
             if(id)body.version=data.entry.version;

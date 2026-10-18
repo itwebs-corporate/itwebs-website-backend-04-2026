@@ -24,10 +24,12 @@ public class MediaService {
     private final BlogArticleRepository blog;
     private final CatalogRepository catalog;
     private final SiteBlockRepository blocks;
+    private final ru.itwebs.cms.repository.ServiceComponentRepository components;
     public MediaService(MediaRepository media, ContentRepository content, StorageService storage, BlogArticleRepository blog,
-                        CatalogRepository catalog, SiteBlockRepository blocks) {
+                        CatalogRepository catalog, SiteBlockRepository blocks, ru.itwebs.cms.repository.ServiceComponentRepository components) {
         this.media = media; this.content = content; this.storage = storage; this.blog = blog;
         this.catalog = catalog; this.blocks = blocks;
+        this.components = components;
     }
     public List<MediaAsset> list() { return media.findAll(); }
     public long count() { return media.count(); }
@@ -61,7 +63,7 @@ public class MediaService {
         MediaAsset asset = media.findByIdForUpdate(id).orElseThrow();
         if (content.countByMediaId(id) > 0) throw new IllegalArgumentException("Изображение используется на странице");
         if (blog.existsByImagesId(id)) throw new ru.itwebs.cms.blog.BlogConflictException("Изображение используется в статье блога");
-        if (catalog.existsByImagesId(id) || blocks.existsByImagesId(id))
+        if (catalog.existsByImagesId(id) || blocks.existsByImagesId(id) || components.existsByImageId(id))
             throw new ru.itwebs.cms.blog.BlogConflictException("Изображение используется в каталоге или блоке страницы");
         media.delete(asset);
         // Check database references before removing the external object.

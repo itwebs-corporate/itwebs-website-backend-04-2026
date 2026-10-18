@@ -49,7 +49,7 @@ public final class CatalogDtos {
             @NotNull @Size(max = 100) List<@NotNull @Positive Long> caseIds,
             @Valid ServiceContent service, @Valid CaseContent project,
             @Valid SpecialistContent specialist, @Valid MemberContent member,
-            @PositiveOrZero Long version) { }
+            @PositiveOrZero Long version, @Valid ServiceComponentDtos.Selections serviceSelections) { }
     public record CategoryRequest(@NotBlank @Size(max = 120) String name,
                                   @NotBlank @Size(max = 80) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String slug,
                                   @Min(0) int sortOrder, @PositiveOrZero Long version) { }
@@ -61,6 +61,7 @@ public final class CatalogDtos {
                        SpecialistContent specialist, MemberContent member) { }
     public record EntryView(Card entry, String seoTitle, String seoDescription,
                             ServiceContent service, CaseContent project, SpecialistContent specialist,
-                            MemberContent member, List<Card> examples, List<MediaView> images) { }
+                            MemberContent member, List<Card> examples, List<MediaView> images,
+                            ServiceComponentDtos.Selections serviceSelections) { }
     public record EntryPage(List<Card> items, int page, int size, long totalElements, int totalPages) { }
 }

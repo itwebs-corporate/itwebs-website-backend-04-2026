@@ -18,13 +18,15 @@ public class CatalogService {
     private final CatalogCategoryRepository categories;
     private final MediaRepository media;
     private final ru.itwebs.cms.service.StructuredPayloadLimits limits;
+    private final ServiceComponentService components;
 
     public CatalogService(CatalogRepository entries, CatalogCategoryRepository categories, MediaRepository media,
-                          ru.itwebs.cms.service.StructuredPayloadLimits limits) {
+                          ru.itwebs.cms.service.StructuredPayloadLimits limits, ServiceComponentService components) {
         this.entries = entries;
         this.categories = categories;
         this.media = media;
         this.limits = limits;
+        this.components = components;
     }
 
     public static Kind kind(String value) {
@@ -70,11 +72,17 @@ public class CatalogService {
         if (bodies != 1) throw new IllegalArgumentException("Передайте содержимое только выбранного типа записи");
         if (entry instanceof ServiceOffering service) {
             if (request.service() == null) throw new IllegalArgumentException("Заполните содержимое услуги");
+            ServiceContent content = request.service();
+            if (!content.faq().isEmpty() || !content.stack().isEmpty() || !content.process().isEmpty() || !content.tasks().isEmpty()
+                    || !content.audience().isEmpty() || !content.cooperation().isEmpty())
+                throw new IllegalArgumentException("Выберите элементы справочников в serviceSelections; списки внутри service должны быть пустыми");
             service.body = request.service();
+            components.replace(service, request.serviceSelections());
             if (new HashSet<>(request.caseIds()).size() != request.caseIds().size()) throw new IllegalArgumentException("Примеры работ не должны повторяться");
             service.examples.clear();
             request.caseIds().forEach(caseId -> service.examples.add((CaseStudy) find(Kind.CASES, caseId)));
         } else {
+            if (request.serviceSelections() != null) throw new IllegalArgumentException("Справочники услуги допустимы только у услуги");
             if (!request.caseIds().isEmpty()) throw new IllegalArgumentException("Примеры работ задаются только у услуги");
             if (entry instanceof CaseStudy project) {
                 if (request.project() == null) throw new IllegalArgumentException("Заполните содержимое кейса");
@@ -155,15 +163,19 @@ public class CatalogService {
     }
 
     private EntryView view(CatalogEntry entry, boolean published) {
+        Map<Long, MediaAsset> images = new TreeMap<>();
+        entry.images.forEach(image -> images.put(image.getId(), image));
+        if (entry instanceof ServiceOffering service) components.images(service).forEach(image -> images.put(image.getId(), image));
         return new EntryView(card(entry), blank(entry.seoTitle) ? entry.title : entry.seoTitle,
                 blank(entry.seoDescription) ? entry.description : entry.seoDescription,
-                entry instanceof ServiceOffering service ? service.body : null,
+                entry instanceof ServiceOffering service ? components.resolve(service) : null,
                 entry instanceof CaseStudy project ? project.body : null,
                 entry instanceof OutstaffSpecialist specialist ? specialist.body : null,
                 entry instanceof TeamMember member ? member.body : null,
                 entry instanceof ServiceOffering service ? service.examples.stream()
                         .filter(project -> !published || project.published).map(this::card).toList() : List.of(),
-                entry.images.stream().sorted(Comparator.comparing(MediaAsset::getId)).map(this::image).toList());
+                images.values().stream().map(this::image).toList(),
+                entry instanceof ServiceOffering service ? components.selections(service) : null);
     }
 
     private boolean blank(String value) { return value == null || value.isBlank(); }

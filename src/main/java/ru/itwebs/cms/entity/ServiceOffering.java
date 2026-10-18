@@ -14,4 +14,7 @@ public class ServiceOffering extends CatalogEntry {
     @ManyToMany
     @JoinTable(name = "service_examples", joinColumns = @JoinColumn(name = "service_id"), inverseJoinColumns = @JoinColumn(name = "case_id"))
     @OrderColumn(name = "position") public List<CaseStudy> examples = new ArrayList<>();
+    @OneToMany(mappedBy = "service", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OrderBy("position ASC, id ASC") public List<ServiceComponentLink> components = new ArrayList<>();
+    public Long componentsRevision;
 }

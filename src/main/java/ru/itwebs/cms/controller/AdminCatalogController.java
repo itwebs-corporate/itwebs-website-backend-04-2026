@@ -13,7 +13,7 @@ import static ru.itwebs.cms.catalog.CatalogDtos.*;
 
 @RestController
 @RequestMapping("/api/admin/catalog/{kind}")
-@Tag(name = "Админ: каталоги", description = "kind: services, cases, specialists, team. Запись сохраняется целиком. При PUT обязательна version из entry.version. Передайте ровно одно поле service/project/specialist/member согласно каталогу; остальные null. categoryIds — категории этого каталога, caseIds — упорядоченные ID кейсов только для услуги.")
+@Tag(name = "Админ: каталоги", description = "kind: services, cases, specialists, team. Запись сохраняется целиком. При PUT обязательна version из entry.version. Передайте ровно одно поле service/project/specialist/member согласно каталогу; остальные null. У услуги service содержит заголовки и пустые списки, serviceSelections — выбранные ID справочников с переопределениями. categoryIds — категории этого каталога, caseIds — упорядоченные ID кейсов только для услуги.")
 @SecurityRequirement(name = "basicAuth")
 public class AdminCatalogController {
     private final CatalogService catalog;
