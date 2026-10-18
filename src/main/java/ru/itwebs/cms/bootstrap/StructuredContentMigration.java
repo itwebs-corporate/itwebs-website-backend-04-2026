@@ -97,7 +97,12 @@ public class StructuredContentMigration implements CommandLineRunner {
         layouts.forEach((slug, page) -> {
             List<String> order = LAYOUTS.getOrDefault(slug, List.of());
             page.blocks.sort(Comparator.comparingInt(block -> order.contains(block.key) ? order.indexOf(block.key) : order.size()));
-            for (int index = 0; index < page.blocks.size(); index++) page.blocks.get(index).sortOrder = index;
+            for (int index = 0; index < page.blocks.size(); index++) {
+                SiteBlock block = page.blocks.get(index);
+                block.sortOrder = index;
+                if (block.title.codePointCount(0, block.title.length()) > 240)
+                    block.title = block.title.substring(0, block.title.offsetByCodePoints(0, 240));
+            }
         });
         reuseSeo(layouts.get("product"), layouts.get("services"));
         reuseSeo(layouts.get("service-detail"), layouts.get("services"));
