@@ -232,6 +232,7 @@ public class StructuredContentMigration implements CommandLineRunner {
         List<Integer> starts = new ArrayList<>();
         List<Integer> ends = new ArrayList<>();
         while (matcher.find()) {
+            if (matcher.group().startsWith("1. Общие положения2. Основные понятия")) continue;
             titles.add(matcher.group());
             starts.add(matcher.start());
             ends.add(matcher.end());
