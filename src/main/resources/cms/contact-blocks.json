@@ -1,0 +1,276 @@
+[
+  {
+    "key": "contacts-hero",
+    "title": "Первый экран",
+    "type": "HERO",
+    "schema": {
+      "fields": {
+        "title": {
+          "label": "Заголовок",
+          "type": "TEXT"
+        },
+        "eyebrow": {
+          "label": "Надзаголовок",
+          "type": "TEXT"
+        },
+        "description": {
+          "label": "Описание",
+          "type": "TEXT"
+        }
+      },
+      "itemFields": {}
+    },
+    "data": {
+      "fields": {
+        "title": {
+          "text": "Контакты",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "eyebrow": {
+          "text": "# Всё, что нужно для вашей задачи",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "description": {
+          "text": "Работаем распределенной командой по всему миру.\nЮридические лица зарегистрированы в России, Беларуси и Польше.",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        }
+      },
+      "items": []
+    }
+  },
+  {
+    "key": "contacts-departments",
+    "title": "Отделы и способы связи",
+    "type": "CARDS",
+    "schema": {
+      "fields": {},
+      "itemFields": {
+        "name": {
+          "label": "Отдел",
+          "type": "TEXT"
+        },
+        "email": {
+          "label": "Электронная почта",
+          "type": "LINK"
+        },
+        "telegram": {
+          "label": "Telegram",
+          "type": "LINK"
+        },
+        "max": {
+          "label": "MAX",
+          "type": "LINK"
+        }
+      }
+    },
+    "data": {
+      "fields": {},
+      "items": [
+        {
+          "name": {
+            "text": "Технический отдел",
+            "href": null,
+            "mediaId": null,
+            "published": true
+          },
+          "email": {
+            "text": "tech@itwebs.ru",
+            "href": "mailto:tech@itwebs.ru",
+            "mediaId": null,
+            "published": true
+          },
+          "telegram": {
+            "text": "Telegram",
+            "href": "https://t.me/itwebsru",
+            "mediaId": null,
+            "published": true
+          },
+          "max": {
+            "text": "MAX",
+            "href": "https://max.ru/u/f9LHodD0cOLXec3LEs9xKO5fxRLYkKFGNLGNVvgAJkROaaO8WUcjT-JIpOw",
+            "mediaId": null,
+            "published": true
+          }
+        },
+        {
+          "name": {
+            "text": "Отдел продаж",
+            "href": null,
+            "mediaId": null,
+            "published": true
+          },
+          "email": {
+            "text": "sales@itwebs.ru",
+            "href": "mailto:sales@itwebs.ru",
+            "mediaId": null,
+            "published": true
+          },
+          "telegram": {
+            "text": "Telegram",
+            "href": "https://t.me/itwebsru",
+            "mediaId": null,
+            "published": true
+          },
+          "max": {
+            "text": "MAX",
+            "href": "https://max.ru/u/f9LHodD0cOLXec3LEs9xKO5fxRLYkKFGNLGNVvgAJkROaaO8WUcjT-JIpOw",
+            "mediaId": null,
+            "published": true
+          }
+        },
+        {
+          "name": {
+            "text": "Отдел найма",
+            "href": null,
+            "mediaId": null,
+            "published": true
+          },
+          "email": {
+            "text": "hr@itwebs.ru",
+            "href": "mailto:hr@itwebs.ru",
+            "mediaId": null,
+            "published": true
+          },
+          "telegram": {
+            "text": "Telegram",
+            "href": "https://t.me/itwebsru",
+            "mediaId": null,
+            "published": true
+          },
+          "max": {
+            "text": "MAX",
+            "href": "https://max.ru/u/f9LHodD0cOLXec3LEs9xKO5fxRLYkKFGNLGNVvgAJkROaaO8WUcjT-JIpOw",
+            "mediaId": null,
+            "published": true
+          }
+        }
+      ]
+    }
+  },
+  {
+    "key": "contacts-office",
+    "title": "Офис",
+    "type": "COPY",
+    "schema": {
+      "fields": {
+        "title": {
+          "label": "Город",
+          "type": "TEXT"
+        },
+        "address": {
+          "label": "Адрес",
+          "type": "TEXT"
+        },
+        "map": {
+          "label": "Карта",
+          "type": "LINK"
+        }
+      },
+      "itemFields": {}
+    },
+    "data": {
+      "fields": {
+        "title": {
+          "text": "Москва",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "address": {
+          "text": "119017, г. Москва, ул. Пятницкая, д. 37, пом. 1/1",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "map": {
+          "text": "Смотреть на карте",
+          "href": "https://yandex.ru/maps/?text=119017%2C+Москва%2C+улица+Пятницкая%2C+37",
+          "mediaId": null,
+          "published": true
+        }
+      },
+      "items": []
+    }
+  },
+  {
+    "key": "contacts-company",
+    "title": "Реквизиты",
+    "type": "COPY",
+    "schema": {
+      "fields": {
+        "title": {
+          "label": "Заголовок",
+          "type": "TEXT"
+        },
+        "name": {
+          "label": "Юридическое наименование",
+          "type": "TEXT"
+        },
+        "address": {
+          "label": "Юридический адрес",
+          "type": "TEXT"
+        },
+        "inn": {
+          "label": "ИНН",
+          "type": "TEXT"
+        },
+        "kpp": {
+          "label": "КПП",
+          "type": "TEXT"
+        },
+        "ogrn": {
+          "label": "ОГРН",
+          "type": "TEXT"
+        }
+      },
+      "itemFields": {}
+    },
+    "data": {
+      "fields": {
+        "title": {
+          "text": "Реквизиты",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "name": {
+          "text": "ООО «ПрофИнфоТех-С»",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "address": {
+          "text": "119017, г. Москва, ул. Пятницкая, д. 37, пом. 1/1",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "inn": {
+          "text": "9705250373",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "kpp": {
+          "text": "770501001",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        },
+        "ogrn": {
+          "text": "1257700507800",
+          "href": null,
+          "mediaId": null,
+          "published": true
+        }
+      },
+      "items": []
+    }
+  }
+]

@@ -47,7 +47,7 @@ public class AdminMediaController {
     }
 
     @DeleteMapping("/{id}")
-    @Operation(summary = "Удалить изображение", description = "Файл нельзя удалить, пока он используется элементом контента или статьёй блога (включая черновик). Использование в блоге возвращает 409.")
+    @Operation(summary = "Удалить изображение", description = "Файл нельзя удалить, пока он используется блоком страницы, записью каталога или статьёй блога, включая черновики. Используемые связи возвращают 409.")
     public ResponseEntity<Void> delete(@PathVariable Long id) {
         media.delete(id);
         return ResponseEntity.noContent().build();

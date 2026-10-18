@@ -22,6 +22,7 @@ public class ContentItem {
     @Column(columnDefinition = "text") private String value;
     @Size(max = 1000) private String href;
     @ManyToOne(fetch = FetchType.EAGER) private MediaAsset media;
+    @Column(name = "archived_media_id") private Long archivedMediaId;
     @Column(name = "sort_order", nullable = false) private int sortOrder;
     private boolean published = true;
 
@@ -43,6 +44,8 @@ public class ContentItem {
     public void setHref(String href) { this.href = href; }
     public MediaAsset getMedia() { return media; }
     public void setMedia(MediaAsset media) { this.media = media; }
+    public Long getArchivedMediaId() { return archivedMediaId; }
+    public void setArchivedMediaId(Long archivedMediaId) { this.archivedMediaId = archivedMediaId; }
     public int getSortOrder() { return sortOrder; }
     public void setSortOrder(int sortOrder) { this.sortOrder = sortOrder; }
     public boolean isPublished() { return published; }

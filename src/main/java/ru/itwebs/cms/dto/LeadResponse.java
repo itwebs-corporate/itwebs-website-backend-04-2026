@@ -5,10 +5,12 @@ import java.time.Instant;
 
 public record LeadResponse(Long id, String name, String phone, String email, String message,
                            String contactMethod, Instant createdAt, boolean processed,
-                           String amoCrmSyncStatus, Long amoCrmLeadId, String amoCrmSyncError) {
+                           String amoCrmSyncStatus, Long amoCrmLeadId, String amoCrmSyncError,
+                           String specialist, java.util.List<String> grades, String sourcePage) {
     public static LeadResponse from(Lead lead) {
         return new LeadResponse(lead.getId(), lead.getName(), lead.getPhone(), lead.getEmail(),
                 lead.getMessage(), lead.getContactMethod(), lead.getCreatedAt(), lead.isProcessed(),
-                lead.getAmoCrmSyncStatus(), lead.getAmoCrmLeadId(), lead.getAmoCrmSyncError());
+                lead.getAmoCrmSyncStatus(), lead.getAmoCrmLeadId(), lead.getAmoCrmSyncError(),
+                lead.getSpecialist(), lead.getGrades(), lead.getSourcePage());
     }
 }

@@ -6,6 +6,8 @@ import ru.itwebs.cms.entity.MediaAsset;
 import ru.itwebs.cms.repository.ContentRepository;
 import ru.itwebs.cms.repository.MediaRepository;
 import ru.itwebs.cms.repository.BlogArticleRepository;
+import ru.itwebs.cms.repository.CatalogRepository;
+import ru.itwebs.cms.repository.SiteBlockRepository;
 import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import java.io.IOException;
@@ -20,8 +22,12 @@ public class MediaService {
     private final ContentRepository content;
     private final StorageService storage;
     private final BlogArticleRepository blog;
-    public MediaService(MediaRepository media, ContentRepository content, StorageService storage, BlogArticleRepository blog) {
+    private final CatalogRepository catalog;
+    private final SiteBlockRepository blocks;
+    public MediaService(MediaRepository media, ContentRepository content, StorageService storage, BlogArticleRepository blog,
+                        CatalogRepository catalog, SiteBlockRepository blocks) {
         this.media = media; this.content = content; this.storage = storage; this.blog = blog;
+        this.catalog = catalog; this.blocks = blocks;
     }
     public List<MediaAsset> list() { return media.findAll(); }
     public long count() { return media.count(); }
@@ -55,6 +61,8 @@ public class MediaService {
         MediaAsset asset = media.findByIdForUpdate(id).orElseThrow();
         if (content.countByMediaId(id) > 0) throw new IllegalArgumentException("Изображение используется на странице");
         if (blog.existsByImagesId(id)) throw new ru.itwebs.cms.blog.BlogConflictException("Изображение используется в статье блога");
+        if (catalog.existsByImagesId(id) || blocks.existsByImagesId(id))
+            throw new ru.itwebs.cms.blog.BlogConflictException("Изображение используется в каталоге или блоке страницы");
         media.delete(asset);
         // Check database references before removing the external object.
         media.flush();

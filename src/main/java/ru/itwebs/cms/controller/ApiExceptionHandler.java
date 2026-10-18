@@ -10,6 +10,10 @@ import java.util.NoSuchElementException;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(org.springframework.web.server.ResponseStatusException.class)
+    ProblemDetail responseStatus(org.springframework.web.server.ResponseStatusException error) {
+        return ProblemDetail.forStatusAndDetail(error.getStatusCode(), error.getReason() == null ? "Ошибка запроса" : error.getReason());
+    }
     @ExceptionHandler({ru.itwebs.cms.blog.BlogConflictException.class,
             org.springframework.dao.DataIntegrityViolationException.class,
             org.springframework.dao.OptimisticLockingFailureException.class})

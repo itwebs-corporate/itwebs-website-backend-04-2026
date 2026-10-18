@@ -9,7 +9,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/content")
-@Tag(name = "Публичный контент", description = "Опубликованные тексты, ссылки и изображения для сайта")
+@Tag(name = "Архив публичного контента", description = "Устаревший снимок до миграции. Для актуальных данных используйте /api/pages и /api/catalog.")
 public class PublicContentController {
     private final ContentService content;
     public PublicContentController(ContentService content) { this.content = content; }

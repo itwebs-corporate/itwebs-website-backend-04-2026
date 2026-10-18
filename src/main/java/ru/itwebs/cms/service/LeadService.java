@@ -25,6 +25,9 @@ public class LeadService {
         lead.setEmail(form.email() == null ? null : form.email().trim());
         lead.setMessage(form.message() == null ? "" : form.message().trim());
         lead.setContactMethod(form.contactMethod());
+        lead.setSpecialist(form.specialist() == null ? null : form.specialist().trim());
+        lead.setGrades(form.grades() == null ? List.of() : form.grades().stream().map(String::trim).distinct().toList());
+        lead.setSourcePage(form.sourcePage() == null ? null : form.sourcePage().trim());
         lead.setAmoCrmSyncStatus(amoCrm.isReady() ? "PENDING" : "WAITING_FOR_AUTH");
         lead = leads.save(lead);
         if ("PENDING".equals(lead.getAmoCrmSyncStatus())) amoCrm.sendLead(lead.getId());

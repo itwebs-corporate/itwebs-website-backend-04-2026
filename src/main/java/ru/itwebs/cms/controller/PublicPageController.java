@@ -1,163 +1,60 @@
 package ru.itwebs.cms.controller;
 
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.ExampleObject;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import ru.itwebs.cms.dto.PageResponse;
 import ru.itwebs.cms.service.PageService;
+import ru.itwebs.cms.catalog.CatalogService;
+import ru.itwebs.cms.catalog.CatalogDtos.Kind;
+import ru.itwebs.cms.catalog.CatalogDtos.EntryView;
+import ru.itwebs.cms.blog.BlogDtos.ArticleResponse;
+import ru.itwebs.cms.blog.BlogService;
+import ru.itwebs.cms.dto.DetailPageResponse;
+import ru.itwebs.cms.dto.ArticlePageResponse;
 
 @RestController
 @RequestMapping("/api/pages")
-@Tag(name = "Публичные страницы", description = "Собранные данные страниц для прямого использования фронтендом. В ответ включаются только опубликованные записи; общие шапка, форма и подвал доступны в sections каждого ответа.")
+@Tag(name = "Страницы", description = "Фиксированные страницы: home, services, cases, outstaff, product, blog, blog-article, contacts, policy. Общие блоки включены. Детальные услуги/кейсы/специалисты — /api/catalog/{kind}/{slug}, статьи — /api/blog/articles/{slug}.")
 public class PublicPageController {
     private final PageService pages;
-
-    public PublicPageController(PageService pages) {
-        this.pages = pages;
+    private final CatalogService catalog;
+    private final BlogService blog;
+    public PublicPageController(PageService pages, CatalogService catalog, BlogService blog) {
+        this.pages = pages; this.catalog = catalog; this.blog = blog;
     }
+    @GetMapping({"", "/{slug}"})
+    @Operation(summary = "Контент страницы", description = "blocks — фиксированный каркас, collections — связанные карточки (до 100; полный каталог с пагинацией /api/catalog/{kind}). images — изображения блоков. shared — общий блок. Строки выводите как текст.")
+    public PageResponse get(@PathVariable(required = false) String slug) { return pages.published(slug == null ? "home" : slug); }
 
-    @GetMapping("/blog")
-    @Operation(summary = "Редактируемый контент страницы блога",
-            description = "Первый экран и подписи: blog-page; сменяемые слова заголовка: blog-page-title-words (word, порядок sortOrder); SEO-метаданные: blog-page-meta; нижний SEO-блок: blog-page-seo и blog-page-seo-items. Общие header/contact/footer включены. CRUD каждого поля: /api/admin/content. Категории: /api/blog/categories; карточки: /api/blog/articles.")
-    public PageResponse blog() { return pages.blog(); }
-
-    @GetMapping("/blog-article")
-    @Operation(summary = "Общие блоки шаблона статьи",
-            description = "blog-article-page: заголовки рекомендаций и услуг, подписи времени чтения, плавающая кнопка. blog-article-page-seo и blog-article-page-seo-topics: нижний SEO-блок. blog-article-service-items: serviceGroup ссылается на groupName в services-page-catalog, порядок sortOrder. Общие header/contact/footer включены. CRUD полей: /api/admin/content. Данные конкретной статьи: /api/blog/articles/{slug}; рекомендации: /api/blog/articles/{slug}/related.")
-    public PageResponse blogArticle() { return pages.blogArticle(); }
-
-    @GetMapping("/product")
-    @Operation(summary = "Получить страницу продукта",
-            description = "Контент Product: первый экран, преимущества, демонстрация ProBuilder, управление, примеры применения, этапы, аудитория и общие блоки. "
-                    + "SEO-метаданные: product-page-meta. Плавающая кнопка: product-page/floatingCta. "
-                    + "product-page-use-case-items содержит связанные проекты в project. Поля projectTitle и projectDescription переопределяют их отображение на Product. "
-                    + "Десктопная картинка берётся из project.fields.image, мобильная — из imageMobile; если она не задана, используется десктопная. "
-                    + "Надписи HTML-демонстрации находятся в product-page-demo. SEO-тексты общие с Services: services-page-seo и services-page-seo-topics. "
-                    + "CRUD полей: GET/POST /api/admin/content и GET/PUT/DELETE /api/admin/content/{id}. Загрузка изображений: POST /api/admin/media, привязка через mediaId.",
-            responses = @ApiResponse(responseCode = "200", description = "Страница продукта",
-                    content = @Content(schema = @Schema(implementation = PageResponse.class))))
-    public PageResponse product() {
-        return pages.product();
+    @GetMapping("/{section:services|cases|outstaff|team}/{slug}")
+    @Operation(summary = "Детальная страница услуги, кейса или специалиста", description = "layout содержит общие блоки; content — данные записи с собственными блоками. Неопубликованная запись или скрытый шаблон даёт 404.")
+    public DetailPageResponse detail(@PathVariable String section, @PathVariable String slug) {
+        Kind kind = switch (section) {
+            case "services" -> Kind.SERVICES;
+            case "cases" -> Kind.CASES;
+            case "outstaff" -> Kind.SPECIALISTS;
+            default -> Kind.TEAM;
+        };
+        String template = switch (kind) {
+            case SERVICES -> "service-detail";
+            case CASES -> "case-detail";
+            case SPECIALISTS -> "specialist-detail";
+            case TEAM -> "team-detail";
+        };
+        EntryView content = catalog.published(kind, slug);
+        return new DetailPageResponse(metadata(pages.published(template), content.entry().link(), content.entry().title(),
+                content.seoTitle(), content.seoDescription()), content);
     }
-
-    @GetMapping("/outstaff")
-    @Operation(summary = "Получить страницу аутстаффинга",
-            description = "Контент Outstaff: первый экран, ситуации, специалисты, фильтры, команда, этапы, оплата, форма и SEO. "
-                    + "Фильтры: outstaff-page-filters (key, label). Карточки: outstaff-page-specialist-items; filterN ссылается на key фильтра; all показывает все карточки. "
-                    + "Команда и фото: общие team и team-members; outstaff-page-team-overrides заменяет поля участника с тем же groupName. "
-                    + "SEO-метаданные: outstaff-page-meta. Плавающая кнопка: outstaff-page/floatingCta. photoAlt переопределяет alt фотографии. "
-                    + "Форма: общая contact с полями outstaff-page-contact и вариантами outstaff-page-contact-specialists/contact-grades (key, label). "
-                    + "Каждое поле содержит id для GET/PUT/DELETE /api/admin/content/{id}; создание через POST /api/admin/content. "
-                    + "Фотографии загружаются POST /api/admin/media и связываются через mediaId.",
-            responses = @ApiResponse(responseCode = "200", description = "Страница аутстаффинга",
-                    content = @Content(schema = @Schema(implementation = PageResponse.class))))
-    public PageResponse outstaff() {
-        return pages.outstaff();
+    @GetMapping("/blog/{slug}")
+    @Operation(summary = "Детальная страница статьи с общими блоками и рекомендациями")
+    public ArticlePageResponse article(@PathVariable String slug) {
+        ArticleResponse content = blog.published(slug);
+        return new ArticlePageResponse(metadata(pages.published("blog-article"), content.article().url(), content.article().title(),
+                content.seoTitle(), content.seoDescription()), content, blog.related(slug, 3));
     }
-
-    @GetMapping("/services")
-    @Operation(
-            summary = "Получить страницу услуг",
-            description = "Возвращает готовый контент страницы услуг одним ответом: секции, каталог, этапы, задачи, модели, общие блоки и проекты. Карточки услуг и контент сгруппированы по groupName; поля внутри fields доступны по itemKey. У каждой записи fields есть id для обновления через админский CRUD. Изображения возвращают mediaUrl. "
-                    + "Сменяемые слова заголовка: services-page-title-words, группы word-1/word-2/word-3, поле word (разработки, поддержки, автоматизации), порядок sortOrder. "
-                    + "В services-page группа automation содержит полный title для автоматизации. services-page-seo: поле eyebrow в группе с groupName=null, значение «Для поискового интента».",
-            responses = @ApiResponse(responseCode = "200", description = "Страница услуг",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PageResponse.class),
-                            examples = @ExampleObject(name = "Услуги", value = """
-                                    {
-                                      "page": "services",
-                                      "sections": {
-                                        "services-page": [
-                                          {
-                                            "groupName": null,
-                                            "fields": {
-                                              "title": {"id": 12, "type": "TEXT", "label": "title", "value": "Услуги ITWEBS — полный цикл разработки", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 12}
-                                            },
-                                            "project": null
-                                          }
-                                        ],
-                                        "services-page-title-words": [
-                                          {"groupName": "word-1", "fields": {"word": {"id": 100, "type": "TEXT", "label": "Сменяемое слово заголовка", "value": "разработки", "sortOrder": 100}}, "project": null},
-                                          {"groupName": "word-2", "fields": {"word": {"id": 101, "type": "TEXT", "label": "Сменяемое слово заголовка", "value": "поддержки", "sortOrder": 101}}, "project": null},
-                                          {"groupName": "word-3", "fields": {"word": {"id": 102, "type": "TEXT", "label": "Сменяемое слово заголовка", "value": "автоматизации", "sortOrder": 102}}, "project": null}
-                                        ],
-                                        "services-page-seo": [
-                                          {"groupName": null, "fields": {"eyebrow": {"id": 104, "type": "TEXT", "label": "Надзаголовок SEO-блока", "value": "Для поискового интента", "sortOrder": 104}}, "project": null}
-                                        ],
-                                        "services-page-catalog": [
-                                          {
-                                            "groupName": "web-service-1",
-                                            "fields": {
-                                              "title": {"id": 20, "type": "TEXT", "label": "title", "value": "Корпоративный сайт под ключ", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 20},
-                                              "price": {"id": 21, "type": "TEXT", "label": "price", "value": "от 350.000 ₽", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 21}
-                                            },
-                                            "project": null
-                                          }
-                                        ],
-                                        "services-page-project-items": [
-                                          {
-                                            "groupName": "project-1",
-                                            "fields": {"projectGroup": {"id": 90, "type": "TEXT", "label": "projectGroup", "value": "project-1", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 90}},
-                                            "project": {"groupName": "project-1", "fields": {"title": {"id": 91, "type": "TEXT", "label": "title", "value": "Bioflora — платформа микробиомной диагностики кожи", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 91}}, "project": null}
-                                          }
-                                        ]
-                                      }
-                                    }
-                                    """))))
-    public PageResponse services() {
-        return pages.services();
-    }
-
-    @GetMapping("/cases")
-    @Operation(
-            summary = "Получить страницу кейсов",
-            description = "Возвращает готовый контент страницы кейсов одним ответом. Фильтры перечислены в cases-page-filters. Каждая группа cases-page-items содержит связанные фильтры (filter1, filter2, ...), а поле project — полную карточку проекта с title, category, description, details и image. Кейс может иметь несколько фильтров; для фильтрации сравнивайте значения filterN с полем key фильтра. Повторяющиеся визуальные копии одной карточки возвращаются как одна запись. "
-                    + "cases-page-seo: поле eyebrow в группе с groupName=null, значение «Для поискового интента». Поле содержит id для редактирования через PUT /api/admin/content/{id}.",
-            responses = @ApiResponse(responseCode = "200", description = "Страница кейсов",
-                    content = @Content(mediaType = "application/json",
-                            schema = @Schema(implementation = PageResponse.class),
-                            examples = @ExampleObject(name = "Кейсы и фильтры", value = """
-                                    {
-                                      "page": "cases",
-                                      "sections": {
-                                        "cases-page-seo": [
-                                          {"groupName": null, "fields": {"eyebrow": {"id": 105, "type": "TEXT", "label": "Надзаголовок SEO-блока", "value": "Для поискового интента", "sortOrder": 105}}, "project": null}
-                                        ],
-                                        "cases-page-filters": [
-                                          {"groupName": "filter-mobile", "fields": {"key": {"id": 30, "type": "TEXT", "label": "key", "value": "mobile", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 30}, "label": {"id": 31, "type": "TEXT", "label": "label", "value": "Mobile", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 31}}, "project": null},
-                                          {"groupName": "filter-ai", "fields": {"key": {"id": 32, "type": "TEXT", "label": "key", "value": "ai", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 32}, "label": {"id": 33, "type": "TEXT", "label": "label", "value": "AI", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 33}}, "project": null}
-                                        ],
-                                        "cases-page-items": [
-                                          {
-                                            "groupName": "case-1",
-                                            "fields": {
-                                              "projectGroup": {"id": 40, "type": "TEXT", "label": "projectGroup", "value": "project-1", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 40},
-                                              "filter1": {"id": 41, "type": "TEXT", "label": "filter1", "value": "web", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 41},
-                                              "filter2": {"id": 42, "type": "TEXT", "label": "filter2", "value": "ai", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 42}
-                                            },
-                                            "project": {
-                                              "groupName": "project-1",
-                                              "fields": {
-                                                "title": {"id": 50, "type": "TEXT", "label": "title", "value": "Bioflora — платформа микробиомной диагностики кожи", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 50},
-                                                "category": {"id": 51, "type": "TEXT", "label": "category", "value": "Web разработка", "href": null, "mediaId": null, "mediaUrl": null, "sortOrder": 51},
-                                                "details": {"id": 52, "type": "LINK", "label": "details", "value": "Подробнее", "href": "/cases/skin-insights", "mediaId": null, "mediaUrl": null, "sortOrder": 52},
-                                                "image": {"id": 53, "type": "IMAGE", "label": "image", "value": "Bioflora — платформа микробиомной диагностики кожи", "href": null, "mediaId": 7, "mediaUrl": "/api/media/7", "sortOrder": 53}
-                                              },
-                                              "project": null
-                                            }
-                                          }
-                                        ]
-                                      }
-                                    }
-                                    """))))
-    public PageResponse cases() {
-        return pages.cases();
+    private PageResponse metadata(PageResponse layout, String path, String title, String seoTitle, String seoDescription) {
+        return new PageResponse(layout.page(), path, title, seoTitle, seoDescription, path,
+                layout.blocks(), layout.collections(), layout.images());
     }
 }

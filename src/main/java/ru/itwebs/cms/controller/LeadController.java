@@ -18,7 +18,7 @@ public class LeadController {
     public LeadController(LeadService leads) { this.leads = leads; }
 
     @PostMapping
-    @Operation(summary = "Отправить заявку", description = "Сохраняет заявку в PostgreSQL и асинхронно передаёт её в amoCRM, если аккаунт подключён. Требуются имя, согласие и хотя бы один контакт: телефон или почта. Описание задачи (message) необязательно, до 5000 символов; можно пропустить или передать null/пустую строку.")
+    @Operation(summary = "Отправить заявку", description = "Сохраняет заявку в PostgreSQL и асинхронно передаёт её в amoCRM, если аккаунт подключён. Требуются имя, согласие и хотя бы один контакт: телефон или почта. Описание задачи (message) необязательно, до 5000 символов. Для аутстаффинга доступны specialist и grades; sourcePage сохраняет страницу отправки. Дополнительные поля видны в админке и примечании amoCRM.")
     public ResponseEntity<Map<String, Long>> create(@Valid @RequestBody LeadRequest request) {
         Long id = leads.create(request).getId();
         return ResponseEntity.created(URI.create("/api/admin/leads/" + id)).body(Map.of("id", id));

@@ -14,9 +14,25 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.CorsConfigurationSource;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import java.util.Arrays;
+import java.util.List;
 
 @Configuration
 public class SecurityConfig {
+    @Bean
+    CorsConfigurationSource cors(@Value("${app.cors.allowed-origins}") String origins) {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(Arrays.stream(origins.split(",")).map(String::trim).filter(value -> !value.isEmpty()).toList());
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setMaxAge(3600L);
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/api/**", config);
+        return source;
+    }
     @Bean
     PasswordEncoder passwordEncoder() { return new BCryptPasswordEncoder(); }
 
@@ -37,9 +53,10 @@ public class SecurityConfig {
                     .requestMatchers("/admin", "/admin/**").permitAll()
                     .requestMatchers("/swagger-ui/**", "/swagger-ui.html", "/v3/api-docs/**").permitAll()
                     .requestMatchers("/api/integrations/amocrm/callback", "/api/integrations/amocrm/secrets").permitAll()
-                    .requestMatchers(HttpMethod.GET, "/api/content", "/api/content/**", "/api/pages/**", "/api/media/**", "/api/blog/**").permitAll()
+                    .requestMatchers(HttpMethod.GET, "/api/content", "/api/content/**", "/api/pages", "/api/pages/**", "/api/catalog/**", "/api/media/**", "/api/blog/**").permitAll()
                     .requestMatchers(HttpMethod.POST, "/api/leads").permitAll()
                     .anyRequest().hasRole("ADMIN"))
+                .cors(Customizer.withDefaults())
                 .csrf(AbstractHttpConfigurer::disable)
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .httpBasic(Customizer.withDefaults())

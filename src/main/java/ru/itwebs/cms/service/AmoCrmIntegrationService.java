@@ -167,6 +167,9 @@ public class AmoCrmIntegrationService {
                         "\nТелефон: " + valueOrDash(lead.getPhone()) +
                         "\nПочта: " + valueOrDash(lead.getEmail()) +
                         "\nПредпочтительный способ связи: " + valueOrDash(lead.getContactMethod()) +
+                        (lead.getSpecialist() == null || lead.getSpecialist().isBlank() ? "" : "\nСпециалист: " + lead.getSpecialist()) +
+                        (lead.getGrades().isEmpty() ? "" : "\nГрейды: " + String.join(", ", lead.getGrades())) +
+                        (lead.getSourcePage() == null || lead.getSourcePage().isBlank() ? "" : "\nСтраница: " + lead.getSourcePage()) +
                         (lead.getMessage() == null || lead.getMessage().isBlank()
                                 ? "" : "\n\nСообщение:\n" + lead.getMessage()));
                 api("POST", "/api/v4/leads/" + lead.getAmoCrmLeadId() + "/notes", notes);

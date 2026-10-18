@@ -14,7 +14,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/content")
-@Tag(name = "Админ: контент", description = "CRUD всех надписей, ссылок и мест для изображений")
+@Tag(name = "Архив старого контента", description = "Доступен только для чтения после миграции. Изменения через этот API возвращают 410. Рабочие API: /api/admin/pages и /api/admin/catalog.")
 @SecurityRequirement(name = "basicAuth")
 public class AdminContentController {
     private final ContentService content;

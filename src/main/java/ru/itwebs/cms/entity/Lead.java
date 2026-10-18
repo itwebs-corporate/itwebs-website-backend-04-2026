@@ -12,6 +12,10 @@ public class Lead {
     @Column(length = 255) private String email;
     @Column(nullable = false, columnDefinition = "text") private String message;
     @Column(length = 30) private String contactMethod;
+    @Column(length = 120) private String specialist;
+    @org.hibernate.annotations.JdbcTypeCode(org.hibernate.type.SqlTypes.JSON)
+    @Column(columnDefinition = "jsonb") private java.util.List<String> grades;
+    @Column(length = 1000) private String sourcePage;
     @Column(nullable = false) private Instant createdAt = Instant.now();
     private boolean processed;
     @Column(name = "amocrm_lead_id") private Long amoCrmLeadId;
@@ -31,6 +35,12 @@ public class Lead {
     public void setMessage(String message) { this.message = message; }
     public String getContactMethod() { return contactMethod; }
     public void setContactMethod(String contactMethod) { this.contactMethod = contactMethod; }
+    public String getSpecialist() { return specialist; }
+    public void setSpecialist(String specialist) { this.specialist = specialist; }
+    public java.util.List<String> getGrades() { return grades == null ? java.util.List.of() : grades; }
+    public void setGrades(java.util.List<String> grades) { this.grades = grades; }
+    public String getSourcePage() { return sourcePage; }
+    public void setSourcePage(String sourcePage) { this.sourcePage = sourcePage; }
     public Instant getCreatedAt() { return createdAt; }
     public void setCreatedAt(Instant createdAt) { this.createdAt = createdAt; }
     public boolean isProcessed() { return processed; }
