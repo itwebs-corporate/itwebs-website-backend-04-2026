@@ -28,7 +28,7 @@ public class PublicPageController {
     public PageResponse get(@PathVariable(required = false) String slug) { return pages.published(slug == null ? "home" : slug); }
 
     @GetMapping("/{section:services|cases|outstaff|team}/{slug}")
-    @Operation(summary = "Детальная страница услуги, кейса или специалиста", description = "layout содержит общие блоки; content — данные записи с собственными блоками. Неопубликованная запись или скрытый шаблон даёт 404.")
+    @Operation(summary = "Детальная страница услуги, кейса или специалиста", description = "layout содержит общие блоки; content — данные записи с собственными блоками. В content.project.sectionsV2 находятся типизированные секции кейса; stack/gallery берутся из одноимённых списков project. content.linkedService содержит карточку связанной опубликованной услуги. Для услуги без настроенного основного адреса layout.canonical=null. Неопубликованная запись или скрытый шаблон даёт 404.")
     public DetailPageResponse detail(@PathVariable String section, @PathVariable String slug) {
         Kind kind = switch (section) {
             case "services" -> Kind.SERVICES;
@@ -44,17 +44,17 @@ public class PublicPageController {
         };
         EntryView content = catalog.published(kind, slug);
         return new DetailPageResponse(metadata(pages.published(template), content.entry().link(), content.entry().title(),
-                content.seoTitle(), content.seoDescription()), content);
+                content.seoTitle(), content.seoDescription(), content.canonical()), content);
     }
     @GetMapping("/blog/{slug}")
     @Operation(summary = "Детальная страница статьи с общими блоками и рекомендациями")
     public ArticlePageResponse article(@PathVariable String slug) {
         ArticleResponse content = blog.published(slug);
         return new ArticlePageResponse(metadata(pages.published("blog-article"), content.article().url(), content.article().title(),
-                content.seoTitle(), content.seoDescription()), content, blog.related(slug, 3));
+                content.seoTitle(), content.seoDescription(), content.article().url()), content, blog.related(slug, 3));
     }
-    private PageResponse metadata(PageResponse layout, String path, String title, String seoTitle, String seoDescription) {
-        return new PageResponse(layout.page(), path, title, seoTitle, seoDescription, path,
+    private PageResponse metadata(PageResponse layout, String path, String title, String seoTitle, String seoDescription, String canonical) {
+        return new PageResponse(layout.page(), path, title, seoTitle, seoDescription, canonical,
                 layout.blocks(), layout.collections(), layout.images());
     }
 }

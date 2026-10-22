@@ -194,7 +194,7 @@ public class BlogService {
         return categories.findById(id).orElseThrow(() -> new NoSuchElementException("Категория не найдена: " + id));
     }
     private MediaAsset findMedia(Long id) {
-        return media.findByIdForUpdate(id).orElseThrow(() -> new NoSuchElementException("Изображение не найдено: " + id));
+        return ru.itwebs.cms.service.MediaFormats.requireImage(media.findByIdForUpdate(id).orElseThrow(() -> new NoSuchElementException("Изображение не найдено: " + id)));
     }
     private CategoryResponse categoryResponse(BlogCategory category) {
         return new CategoryResponse(category.getId(), category.getVersion(), category.getName(), category.getSlug(), category.getSortOrder());

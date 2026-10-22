@@ -18,6 +18,7 @@ public abstract class CatalogEntry {
     @Column(length = 240) public String price;
     @Column(length = 240) public String seoTitle;
     @Column(length = 1000) public String seoDescription;
+    @Column(length = 1000) public String canonical;
     @Column(nullable = false) public boolean published;
     @Column(nullable = false) public int sortOrder;
     @ManyToOne(fetch = FetchType.LAZY) public MediaAsset cover;

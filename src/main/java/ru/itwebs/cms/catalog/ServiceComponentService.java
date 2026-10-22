@@ -62,10 +62,14 @@ public class ServiceComponentService {
         item.title = request.title().trim();
         item.description = request.description();
         item.price = request.price();
+        if (request.label() != null) {
+            validateLabel(kind, request.label());
+            item.label = request.label().isBlank() ? null : request.label().trim();
+        }
         validateContent(kind, item.title, item.description, item.price);
         if (request.mediaId() != null && kind != ComponentKind.STACK) throw new IllegalArgumentException("Логотип допустим только у технологии");
-        item.image = request.mediaId() == null ? null : media.findByIdForUpdate(request.mediaId())
-                .orElseThrow(() -> new IllegalArgumentException("Изображение не найдено"));
+        item.image = request.mediaId() == null ? null : ru.itwebs.cms.service.MediaFormats.requireImage(media.findByIdForUpdate(request.mediaId())
+                .orElseThrow(() -> new IllegalArgumentException("Изображение не найдено")));
         item.sortOrder = request.sortOrder();
         item.fingerprint = fingerprint(item);
         ServiceComponent duplicate = components.findByFingerprint(item.fingerprint).orElse(null);
@@ -83,7 +87,13 @@ public class ServiceComponentService {
 
     private ComponentView view(ServiceComponent item) {
         MediaView image = item.image == null ? null : new MediaView(item.image.getId(), "/api/media/" + item.image.getId(), item.image.getAltText());
-        return new ComponentView(item.id, item.version, item.kind, item.title, item.description, item.price, image, item.sortOrder);
+        return new ComponentView(item.id, item.version, item.kind, item.title, item.description, item.price, image, item.sortOrder, item.label);
+    }
+
+    private void validateLabel(ComponentKind kind, String label) {
+        if (kind != ComponentKind.TASK && kind != ComponentKind.PROCESS)
+            throw new IllegalArgumentException("Бейдж допустим только для задачи или этапа");
+        if (label.length() > 240) throw new IllegalArgumentException("Бейдж: до 240 символов");
     }
 
     private void validateContent(ComponentKind kind, String title, String description, String price) {
@@ -98,8 +108,11 @@ public class ServiceComponentService {
 
     private String fingerprint(ServiceComponent item) {
         try {
-            String value = mapper.writeValueAsString(Arrays.asList(item.kind, item.title, item.description, item.price,
+            List<Object> values = new ArrayList<>(Arrays.asList(item.kind, item.title, item.description, item.price,
                     item.image == null ? null : item.image.getId()));
+            // Preserve existing fingerprints when no label has been configured.
+            if (item.label != null) values.add(item.label);
+            String value = mapper.writeValueAsString(values);
             return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(value.getBytes(StandardCharsets.UTF_8)));
         } catch (JsonProcessingException | NoSuchAlgorithmException error) {
             throw new IllegalStateException("Не удалось обработать элемент справочника", error);
@@ -138,6 +151,7 @@ public class ServiceComponentService {
             ServiceComponent component = chosen.get(value.componentId());
             if (component.kind != group.getKey()) throw new IllegalArgumentException("Элемент относится к другому справочнику");
             ComponentOverride override = value.override();
+            if (override != null && override.label() != null) validateLabel(component.kind, override.label());
             validateContent(component.kind, effective(override == null ? null : override.title(), component.title),
                     effective(override == null ? null : override.description(), component.description),
                     effective(override == null ? null : override.price(), component.price));
@@ -188,7 +202,8 @@ public class ServiceComponentService {
 
     private List<Item> items(ServiceOffering service, ComponentKind kind) {
         return ordered(service, kind).stream().map(link -> new Item(title(link), description(link),
-                effective(link.override == null ? null : link.override.price(), link.component.price))).toList();
+                effective(link.override == null ? null : link.override.price(), link.component.price),
+                effective(link.override == null ? null : link.override.label(), link.component.label))).toList();
     }
 
     public List<MediaAsset> images(ServiceOffering service) {
@@ -216,16 +231,21 @@ public class ServiceComponentService {
     }
 
     private List<Selection> importedItems(ComponentKind kind, List<Item> items) {
-        return items.stream().map(item -> imported(kind, item.title(), item.description(), item.price(), null)).toList();
+        return items.stream().map(item -> imported(kind, item.title(), item.description(), item.price(), null, item.label())).toList();
     }
 
     private Selection imported(ComponentKind kind, String title, String description, String price, Long mediaId) {
+        return imported(kind, title, description, price, mediaId, null);
+    }
+
+    private Selection imported(ComponentKind kind, String title, String description, String price, Long mediaId, String label) {
         ServiceComponent item = new ServiceComponent();
+        item.label = label;
         item.kind = kind;
         item.title = title;
         item.description = description;
         item.price = price;
-        item.image = mediaId == null ? null : media.findByIdForUpdate(mediaId).orElseThrow();
+        item.image = mediaId == null ? null : ru.itwebs.cms.service.MediaFormats.requireImage(media.findByIdForUpdate(mediaId).orElseThrow());
         item.fingerprint = fingerprint(item);
         ServiceComponent existing = components.findByFingerprint(item.fingerprint).orElse(null);
         if (existing == null) {

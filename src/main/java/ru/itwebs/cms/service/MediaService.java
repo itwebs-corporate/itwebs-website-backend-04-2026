@@ -12,12 +12,10 @@ import software.amazon.awssdk.core.ResponseBytes;
 import software.amazon.awssdk.services.s3.model.GetObjectResponse;
 import java.io.IOException;
 import java.util.List;
-import java.util.Set;
 import java.util.UUID;
 
 @Service
 public class MediaService {
-    private static final Set<String> TYPES = Set.of("image/jpeg", "image/png", "image/webp", "image/gif", "image/avif");
     private final MediaRepository media;
     private final ContentRepository content;
     private final StorageService storage;
@@ -35,16 +33,20 @@ public class MediaService {
     public long count() { return media.count(); }
     public MediaAsset find(Long id) { return media.findById(id).orElseThrow(); }
     public MediaAsset upload(MultipartFile file, String altText) throws IOException {
-        String type = file.getContentType();
-        if (file.isEmpty() || type == null || !TYPES.contains(type)) throw new IllegalArgumentException("Разрешены JPEG, PNG, WebP, GIF и AVIF");
-        if (altText == null || altText.isBlank()) throw new IllegalArgumentException("Укажите описание изображения");
-        String suffix = switch (type) { case "image/jpeg" -> ".jpg"; case "image/png" -> ".png"; case "image/webp" -> ".webp"; case "image/gif" -> ".gif"; default -> ".avif"; };
+        String declaredType = file.getContentType();
+        if (declaredType == null) throw new IllegalArgumentException("Не указан формат файла");
+        var parsedType = org.springframework.http.MediaType.parseMediaType(declaredType);
+        String type = parsedType.getType() + "/" + parsedType.getSubtype();
+        if (file.getSize() > 15 * 1024 * 1024) throw new IllegalArgumentException("Файл не должен превышать 15 МБ");
+        MediaFormats.validate(type, file.getBytes());
+        if (altText == null || altText.isBlank() || altText.length() > 255) throw new IllegalArgumentException("Укажите описание файла до 255 символов");
+        String suffix = MediaFormats.suffix(type);
         String key = UUID.randomUUID() + suffix;
         storage.upload(file, key, type);
         MediaAsset asset = new MediaAsset();
         asset.setObjectKey(key);
         String originalName = file.getOriginalFilename();
-        asset.setOriginalName(originalName == null || originalName.isBlank() ? "image" : originalName.substring(0, Math.min(originalName.length(), 255)));
+        asset.setOriginalName(originalName == null || originalName.isBlank() ? "file" + suffix : originalName.substring(0, Math.min(originalName.length(), 255)));
         asset.setContentType(type);
         asset.setAltText(altText.trim());
         asset.setSizeBytes(file.getSize());
@@ -61,10 +63,10 @@ public class MediaService {
     @org.springframework.transaction.annotation.Transactional
     public void delete(Long id) {
         MediaAsset asset = media.findByIdForUpdate(id).orElseThrow();
-        if (content.countByMediaId(id) > 0) throw new IllegalArgumentException("Изображение используется на странице");
+        if (content.countByMediaId(id) > 0) throw new ru.itwebs.cms.blog.BlogConflictException("Файл используется на странице");
         if (blog.existsByImagesId(id)) throw new ru.itwebs.cms.blog.BlogConflictException("Изображение используется в статье блога");
         if (catalog.existsByImagesId(id) || blocks.existsByImagesId(id) || components.existsByImageId(id))
-            throw new ru.itwebs.cms.blog.BlogConflictException("Изображение используется в каталоге или блоке страницы");
+            throw new ru.itwebs.cms.blog.BlogConflictException("Файл используется в каталоге или блоке страницы");
         media.delete(asset);
         // Check database references before removing the external object.
         media.flush();

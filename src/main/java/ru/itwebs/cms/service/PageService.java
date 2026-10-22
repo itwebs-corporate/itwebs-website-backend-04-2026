@@ -47,7 +47,7 @@ public class PageService {
                 ? catalog.list(binding.kind, true, null, 0, 100).items()
                 : binding.entries.stream().filter(entry -> entry.published).map(entry -> displayCard(binding, entry)).toList()));
         Map<Long, MediaView> images = new TreeMap<>();
-        included.forEach(item -> item.images.forEach(image -> images.put(image.getId(), new MediaView(image.getId(), "/api/media/" + image.getId(), image.getAltText()))));
+        included.forEach(item -> item.images.stream().filter(image -> image.getContentType().startsWith("image/")).forEach(image -> images.put(image.getId(), new MediaView(image.getId(), "/api/media/" + image.getId(), image.getAltText()))));
         return new PageResponse(page.slug, page.path, page.title, page.seoTitle, page.seoDescription, page.canonical,
                 included.stream().map(item -> publicBlock(item)).toList(), selections, new ArrayList<>(images.values()));
     }
@@ -68,7 +68,7 @@ public class PageService {
     public AdminPage save(String slug, PageRequest request) {
         SitePage page = find(slug);
         CatalogService.version(page.version, request.version());
-        safeHref(request.canonical());
+        safeCanonical(request.canonical());
         page.title = request.title().trim();
         page.seoTitle = request.seoTitle();
         page.seoDescription = request.seoDescription();
@@ -86,27 +86,70 @@ public class PageService {
         if (item.schema.itemFields().isEmpty() && !request.data().items().isEmpty()) throw new IllegalArgumentException("Этот блок не содержит списка");
         request.data().items().forEach(row -> validateValues(item.schema.itemFields(), row));
         Set<Long> ids = new TreeSet<>();
-        collectImages(request.data().fields(), ids);
-        request.data().items().forEach(row -> collectImages(row, ids));
+        var values = new ArrayList<>(request.data().fields().values());
+        request.data().items().forEach(row -> values.addAll(row.values()));
+        for (Value value : values) {
+            if (value.mediaId() != null) ids.add(value.mediaId());
+            Long linked = linkedMediaId(value.href());
+            if (linked != null) ids.add(linked);
+        }
+        Map<Long, MediaAsset> locked = new LinkedHashMap<>();
+        for (Long mediaId : ids) locked.put(mediaId, media.findByIdForUpdate(mediaId)
+                .orElseThrow(() -> new IllegalArgumentException("Файл не найден: " + mediaId)));
+        Set<MediaAsset> references = new LinkedHashSet<>();
+        Map<String, Value> fields = resolveMedia(item.schema.fields(), request.data().fields(), references, locked);
+        List<Map<String, Value>> rows = request.data().items().stream()
+                .map(row -> resolveMedia(item.schema.itemFields(), row, references, locked)).toList();
         item.images.clear();
-        ids.forEach(imageId -> item.images.add(media.findByIdForUpdate(imageId)
-                .orElseThrow(() -> new IllegalArgumentException("Изображение не найдено: " + imageId))));
-        item.data = request.data();
+        item.images.addAll(references);
+        item.data = new BlockData(fields, rows);
         item.published = request.published();
         return block(blocks.saveAndFlush(item));
     }
-    private void collectImages(Map<String, Value> fields, Set<Long> ids) {
-        fields.values().forEach(value -> { if (value.mediaId() != null) ids.add(value.mediaId()); });
+    private Map<String, Value> resolveMedia(Map<String, FieldRule> schema, Map<String, Value> values, Set<MediaAsset> references, Map<Long, MediaAsset> locked) {
+        Map<String, Value> result = new LinkedHashMap<>();
+        values.forEach((key, value) -> {
+            boolean link = schema.get(key).type().equals("LINK");
+            Long linked = link ? linkedMediaId(value.href()) : null;
+            Long id = value.mediaId() != null ? value.mediaId() : linked;
+            if (id != null) {
+                if (link && value.mediaId() != null && value.href() != null && !value.href().isBlank()
+                        && !id.equals(linked)) throw new IllegalArgumentException("Ссылка не соответствует выбранному файлу");
+                MediaAsset asset = locked.get(id);
+                if (!link) MediaFormats.requireImage(asset);
+                references.add(asset);
+                if (link) value = new Value(value.text(), "/api/media/" + id, value.mediaId(), value.published());
+            }
+            result.put(key, value);
+        });
+        return result;
+    }
+    public static Long linkedMediaId(String href) {
+        if (href == null) return null;
+        var match = java.util.regex.Pattern.compile("/api/media/([1-9][0-9]*)(?:[?#].*)?").matcher(href);
+        if (!match.matches()) return null;
+        try { return Long.valueOf(match.group(1)); }
+        catch (NumberFormatException e) { throw new IllegalArgumentException("Некорректный ID файла в ссылке"); }
     }
     private void validateValues(Map<String, FieldRule> schema, Map<String, Value> values) {
         if (!schema.keySet().equals(values.keySet())) throw new IllegalArgumentException("Набор полей блока фиксирован");
         values.forEach((key, value) -> {
             if (value == null) throw new IllegalArgumentException("Пустое поле блока");
             FieldRule rule = schema.get(key);
-            if (!rule.type().equals("IMAGE") && value.mediaId() != null) throw new IllegalArgumentException("Изображение можно выбрать только в поле изображения");
+            if (!rule.type().equals("IMAGE") && !rule.type().equals("LINK") && value.mediaId() != null) throw new IllegalArgumentException("Файл можно выбрать только в поле изображения или ссылки");
             if (!rule.type().equals("LINK") && value.href() != null && !value.href().isBlank()) throw new IllegalArgumentException("Ссылка допустима только в поле ссылки");
             safeHref(value.href());
         });
+    }
+    public static void safeCanonical(String canonical) {
+        if (canonical == null || canonical.isBlank()) return;
+        safeHref(canonical);
+        if (canonical.contains("#") || !(canonical.startsWith("/") || canonical.startsWith("https://") || canonical.startsWith("http://")))
+            throw new IllegalArgumentException("Основной адрес должен быть путём страницы или http(s)-ссылкой без фрагмента");
+        try {
+            var uri = java.net.URI.create(canonical);
+            if (uri.isAbsolute() && (uri.getHost() == null || uri.getUserInfo() != null)) throw new IllegalArgumentException();
+        } catch (IllegalArgumentException e) { throw new IllegalArgumentException("Некорректный основной адрес страницы"); }
     }
     public static void safeHref(String href) {
         if (href == null || href.isBlank()) return;

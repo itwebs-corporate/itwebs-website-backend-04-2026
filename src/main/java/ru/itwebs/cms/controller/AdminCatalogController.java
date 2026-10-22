@@ -13,7 +13,7 @@ import static ru.itwebs.cms.catalog.CatalogDtos.*;
 
 @RestController
 @RequestMapping("/api/admin/catalog/{kind}")
-@Tag(name = "Админ: каталоги", description = "kind: services, cases, specialists, team. Запись сохраняется целиком. При PUT обязательна version из entry.version. Передайте ровно одно поле service/project/specialist/member согласно каталогу; остальные null. У услуги service содержит заголовки и пустые списки, serviceSelections — выбранные ID справочников с переопределениями. categoryIds — категории этого каталога, caseIds — упорядоченные ID кейсов только для услуги.")
+@Tag(name = "Админ: каталоги", description = "kind: services, cases, specialists, team. Запись сохраняется целиком. При PUT обязательна version из entry.version. Передайте ровно одно поле service/project/specialist/member согласно каталогу; остальные null. У услуги service содержит заголовки и пустые списки, serviceSelections — выбранные ID справочников с переопределениями. categoryIds — категории этого каталога, caseIds — упорядоченные ID кейсов только для услуги. project.sectionsV2 — типизированные секции, tags — теги, serviceId — ID связанной услуги, seo — SEO-блок кейса. Старые плоские sections сохранены. canonical — настраиваемый основной адрес записи; null сохраняет его, пустая строка очищает.")
 @SecurityRequirement(name = "basicAuth")
 public class AdminCatalogController {
     private final CatalogService catalog;
@@ -39,7 +39,7 @@ public class AdminCatalogController {
         return catalog.save(CatalogService.kind(kind), id, request);
     }
     @DeleteMapping("/{id}")
-    @Operation(summary = "Удалить запись", description = "Используемые кейсы и записи, привязанные к странице, защищены внешними ключами. Для скрытия установите published=false.")
+    @Operation(summary = "Удалить запись", description = "Используемые кейсы, услуги, связанные с кейсами, и записи, привязанные к странице, защищены внешними ключами. Для скрытия установите published=false.")
     public ResponseEntity<Void> delete(@PathVariable String kind, @PathVariable Long id) {
         catalog.delete(CatalogService.kind(kind), id);
         return ResponseEntity.noContent().build();

@@ -12,6 +12,7 @@ public class ServiceComponent {
     @Column(nullable = false, length = 1000) public String title;
     @Column(columnDefinition = "text") public String description;
     @Column(length = 240) public String price;
+    @Column(length = 240) public String label;
     @ManyToOne public MediaAsset image;
     @Column(name = "sort_order", nullable = false) public int sortOrder;
     @Column(nullable = false, unique = true, length = 64) public String fingerprint;

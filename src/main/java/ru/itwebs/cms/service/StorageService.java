@@ -43,8 +43,10 @@ public class StorageService {
     }
 
     public void upload(MultipartFile file, String key, String type) throws IOException {
-        s3.putObject(PutObjectRequest.builder().bucket(bucket).key(key).contentType(type).build(),
-                RequestBody.fromInputStream(file.getInputStream(), file.getSize()));
+        try (var input = file.getInputStream()) {
+            s3.putObject(PutObjectRequest.builder().bucket(bucket).key(key).contentType(type).build(),
+                    RequestBody.fromInputStream(input, file.getSize()));
+        }
     }
 
     public ResponseBytes<GetObjectResponse> download(MediaAsset asset) {

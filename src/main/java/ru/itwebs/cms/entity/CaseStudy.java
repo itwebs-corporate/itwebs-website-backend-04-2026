@@ -8,5 +8,8 @@ import ru.itwebs.cms.catalog.CatalogDtos.CaseContent;
 @Entity
 @Table(name = "case_studies")
 public class CaseStudy extends CatalogEntry {
+    @ManyToOne
+    @JoinColumn(name = "service_id", foreignKey = @ForeignKey(name = "fk_case_service"))
+    public ServiceOffering service;
     @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "jsonb") public CaseContent body;
 }
