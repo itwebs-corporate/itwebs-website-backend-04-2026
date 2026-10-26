@@ -24,7 +24,7 @@ public class PublicPageController {
         this.pages = pages; this.catalog = catalog; this.blog = blog;
     }
     @GetMapping({"", "/{slug}"})
-    @Operation(summary = "Контент страницы", description = "blocks — фиксированный каркас, collections — связанные карточки (до 100; полный каталог с пагинацией /api/catalog/{kind}). images — изображения блоков. shared — общий блок. Строки выводите как текст.")
+    @Operation(summary = "Контент страницы", description = "blocks — фиксированный каркас, collections — связанные карточки (до 100; полный каталог с пагинацией /api/catalog/{kind}). images — изображения блоков. shared — общий блок. Опубликованный блок floating-cta с ownerPage=shared содержит ссылки по умолчанию в data.fields.floatingCta и floatingSecondary; он включается также в шаблоны детальных страниц. Непустые одноимённые поля собственной страницы могут использоваться фронтендом как индивидуальные настройки; API не объединяет их с общим блоком автоматически. Строки выводите как текст.")
     public PageResponse get(@PathVariable(required = false) String slug) { return pages.published(slug == null ? "home" : slug); }
 
     @GetMapping("/{section:services|cases|outstaff|team}/{slug}")

@@ -18,7 +18,7 @@ import java.util.*;
 @Component
 @Order(130)
 public class PageFieldsMigration implements CommandLineRunner {
-    private static final String MARKER = "pageFieldsV4";
+    private static final String MARKER = "pageFieldsV5";
     private final ContentRepository markers;
     private final SitePageRepository pages;
     private final SiteBlockRepository blocks;
@@ -39,6 +39,10 @@ public class PageFieldsMigration implements CommandLineRunner {
 
         link("shared", "header", "Шапка сайта", BlockType.NAVIGATION, "cta", "Кнопка в шапке");
         text("shared", "contact", "Форма заявки", BlockType.FORM, "error", "Текст ошибки отправки заявки");
+        link("shared", "floating-cta", "Плавающие кнопки", BlockType.NAVIGATION,
+                "floatingCta", "Основная плавающая кнопка по умолчанию");
+        link("shared", "floating-cta", "Плавающие кнопки", BlockType.NAVIGATION,
+                "floatingSecondary", "Вторая плавающая кнопка по умолчанию");
 
         Map<String, String> heroes = new LinkedHashMap<>();
         heroes.put("home", "hero");
@@ -103,7 +107,7 @@ public class PageFieldsMigration implements CommandLineRunner {
         ContentItem marker = new ContentItem();
         marker.setSectionName("_system");
         marker.setItemKey(MARKER);
-        marker.setLabel("Page field schemas V4");
+        marker.setLabel("Page field schemas V5");
         marker.setValue("complete");
         marker.setPublished(false);
         markers.save(marker);

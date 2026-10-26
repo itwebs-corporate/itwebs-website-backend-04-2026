@@ -11,7 +11,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/admin/pages")
-@Tag(name = "Админ: страницы", description = "Каркас и схемы блоков фиксированы. Можно менять контент, публикацию и связанные записи. Общие блоки редактируются на странице shared. Новые поля добавляются без наполнения; новые блоки создаются черновиками. hero-title-words содержит строки с полем word; policy-page — title и badgeMobile. Кнопки имеют тип LINK: text и href.")
+@Tag(name = "Админ: страницы", description = "Каркас и схемы блоков фиксированы. Можно менять контент, публикацию и связанные записи. Общие блоки редактируются на странице shared. floating-cta задаёт общие кнопки floatingCta и floatingSecondary типа LINK (подпись и адрес). После заполнения и публикации блок включается в ответы всех опубликованных страниц. Существующие одноимённые поля отдельных страниц сохранены для индивидуальных настроек. Новые поля добавляются без наполнения; новые блоки создаются черновиками. hero-title-words содержит строки с полем word; policy-page — title и badgeMobile. Кнопки имеют тип LINK: text и href.")
 @SecurityRequirement(name = "basicAuth")
 public class AdminPageController {
     private final PageService pages;
