@@ -37,6 +37,18 @@ def own_snapshot(response):
     value = json.loads(json.dumps(response))
     card = value.get('entry') or value.get('article')
     if card:
+        # POST serializes Java nanoseconds, while PostgreSQL stores microseconds.
+        # Normalize precision only; retain timestamps and version for edit detection.
+        from datetime import datetime, timedelta
+        import re
+        for field in ('createdAt', 'updatedAt'):
+            if card.get(field):
+                stamp = re.sub(r'(\.\d{6})\d+', r'\1', card[field])
+                parsed = datetime.fromisoformat(stamp.replace('Z', '+00:00'))
+                fraction = re.search(r'\.(\d+)', card[field])
+                if fraction and len(fraction[1]) > 6 and int(fraction[1][6]) >= 5:
+                    parsed += timedelta(microseconds=1)  # PostgreSQL rounds, rather than truncates.
+                card[field] = parsed.isoformat(timespec='microseconds')
         card['categories'] = sorted(item['id'] for item in card.get('categories', []))
         for field in ('cover', 'mobileCover'):
             if field in card:

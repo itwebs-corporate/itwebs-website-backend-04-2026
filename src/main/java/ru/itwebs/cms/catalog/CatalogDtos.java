@@ -79,13 +79,17 @@ public final class CatalogDtos {
             @Size(max = 50000) String description, @Size(max = 240) String price,
             @Size(max = 240) String seoTitle, @Size(max = 1000) String seoDescription,
             boolean published, @Min(0) int sortOrder, @Positive Long coverMediaId, @Positive Long mobileCoverMediaId,
-            @NotNull @Size(max = 20) Set<@NotNull @Positive Long> categoryIds,
+            @Size(max = 20) Set<@NotNull @Positive Long> categoryIds,
             @NotNull @Size(max = 100) List<@NotNull @Positive Long> caseIds,
             @Valid ServiceContent service, @Valid CaseContent project,
             @Valid SpecialistContent specialist, @Valid MemberContent member,
             @PositiveOrZero Long version, @Valid ServiceComponentDtos.Selections serviceSelections,
             @io.swagger.v3.oas.annotations.media.Schema(description = "Основной адрес реальной страницы сайта, включая query при необходимости. null сохраняет прежний адрес; пустая строка очищает. Для услуги без настройки публичный canonical=null.")
-            @Size(max = 1000) String canonical) { }
+            @Size(max = 1000) String canonical,
+            @io.swagger.v3.oas.annotations.media.Schema(description = "Названия технологий по порядку. null/отсутствие сохраняет прежние данные; [] очищает список. Для старых записей по умолчанию берётся существующий стек.", example = "[\"Kotlin\",\"Java\"]")
+            @Size(max = 100) List<@NotBlank @Size(max = 120) String> technologies,
+            @io.swagger.v3.oas.annotations.media.Schema(description = "Коды существующих категорий как альтернатива categoryIds. Если переданы оба списка, они должны совпадать.", example = "[\"mobile\",\"ai\"]")
+            @Size(max = 20) List<@NotBlank @Size(max = 80) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String> categorySlugs) { }
     public record CategoryRequest(@NotBlank @Size(max = 120) String name,
                                   @NotBlank @Size(max = 80) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String slug,
                                   @Min(0) int sortOrder, @PositiveOrZero Long version) { }
@@ -94,7 +98,8 @@ public final class CatalogDtos {
     public record Card(Long id, Long version, Kind kind, String title, String slug, String link,
                        String description, String price, boolean published, int sortOrder,
                        MediaView cover, MediaView mobileCover, List<CategoryView> categories,
-                       SpecialistContent specialist, MemberContent member) { }
+                       SpecialistContent specialist, MemberContent member,
+                       List<String> technologies, List<String> categorySlugs) { }
     public record EntryView(Card entry, String seoTitle, String seoDescription,
                             ServiceContent service, CaseContent project, SpecialistContent specialist,
                             MemberContent member, List<Card> examples, List<MediaView> images,

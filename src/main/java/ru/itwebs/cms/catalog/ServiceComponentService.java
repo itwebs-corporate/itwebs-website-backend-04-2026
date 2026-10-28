@@ -178,6 +178,13 @@ public class ServiceComponentService {
                 selected(service, ComponentKind.AUDIENCE), selected(service, ComponentKind.COOPERATION));
     }
 
+    public List<String> technologies(ServiceOffering service) {
+        List<String> names = ordered(service, ComponentKind.STACK).stream().map(this::title).toList();
+        if (names.isEmpty() && service.body != null && service.body.stack() != null)
+            names = service.body.stack().stream().map(Technology::name).toList();
+        return ru.itwebs.cms.service.StringLists.normalize(names);
+    }
+
     private List<ServiceComponentLink> ordered(ServiceOffering service, ComponentKind kind) {
         return service.components.stream().filter(link -> link.component.kind == kind)
                 .sorted(Comparator.comparingInt(link -> link.position)).toList();

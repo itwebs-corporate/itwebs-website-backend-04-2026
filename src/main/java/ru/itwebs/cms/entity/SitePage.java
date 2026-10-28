@@ -1,6 +1,8 @@
 package ru.itwebs.cms.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -16,6 +18,8 @@ public class SitePage {
     @Column(length = 1000) public String seoDescription;
     @Column(length = 1000) public String canonical;
     @Column(nullable = false) public boolean published = true;
+    @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "jsonb") public List<String> technologies;
+    @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "jsonb") public List<String> categorySlugs;
     @OneToMany(mappedBy = "page", cascade = CascadeType.ALL)
     @OrderBy("sortOrder ASC, id ASC") public List<SiteBlock> blocks = new ArrayList<>();
     @OneToMany(mappedBy = "page", cascade = CascadeType.ALL)

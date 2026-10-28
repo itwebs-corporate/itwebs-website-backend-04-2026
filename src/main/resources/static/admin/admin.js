@@ -162,6 +162,8 @@ async function loadEditorChoices(editing){
 function localDate(s){const d=new Date(s);return new Date(d.getTime()-d.getTimezoneOffset()*60000).toISOString().slice(0,19);}
 function addBlock(data){const block=el('div',undefined,'block'),type=el('select');const types={PARAGRAPH:'Текст',HEADING:'Заголовок',QUOTE:'Цитата',BULLET_LIST:'Список',NUMBERED_LIST:'Нумерованный список',IMAGE:'Картинка'};for(const [v,t] of Object.entries(types))type.append(new Option(t,v));type.value=data.type;type.className='blockType';const controls=el('div',undefined,'toolbar');controls.append(button('↑',()=>{if(block.previousElementSibling)block.parentNode.insertBefore(block,block.previousElementSibling);}),button('↓',()=>{if(block.nextElementSibling)block.parentNode.insertBefore(block.nextElementSibling,block);}),button('Убрать',()=>block.remove()));const fields=el('div');block.append(type,fields,controls);function draw(b={}){fields.replaceChildren();function input(key,title,value,tag='input'){const label=el('label',title),n=el(tag);n.dataset.key=key;n.value=value??'';label.append(n);fields.append(label);return n;}if(type.value==='IMAGE'){const n=input('mediaId','Картинка',b.mediaId,'select');n.append(new Option('Выберите картинку',''));media.filter(isImage).forEach(m=>n.append(new Option(m.originalName,String(m.id))));if(b.mediaId&&!media.some(m=>m.id===b.mediaId))n.append(new Option('Выбранная картинка',String(b.mediaId)));n.value=b.mediaId||'';n.required=true;attachImageUpload(n);input('alt','Описание',b.alt);input('caption','Подпись',b.caption);}else if(type.value.includes('LIST')){input('items','Каждый пункт с новой строки',(b.items||[]).join('\n'),'textarea').required=true;}else{const t=input('text','Текст',b.text,'textarea');t.required=true;t.maxLength=20000;if(type.value==='HEADING'){const level=input('level','Уровень заголовка',b.level||2,'select');[2,3,4].forEach(v=>level.append(new Option('H'+v,String(v))));level.value=b.level||2;}}}type.onchange=()=>draw();draw(data);$('blocks').append(block);}
 function values(){const out={};for(const n of $('fields').querySelectorAll('[name]')){out[n.name]=n.type==='checkbox'?n.checked:n.multiple?[...n.selectedOptions].map(o=>Number(o.value)):n.value;}return out;}
+function stringListField(name,title,items){const input=field(name,title,(items||[]).join('\n'),'textarea');input.maxLength=12100;input.rows=5;return input;}
+function stringListValue(value,maxLength=120){const rows=(value||'').split(/\r?\n/).map(item=>item.trim()).filter(Boolean);if(rows.length>100||rows.some(item=>item.length>maxLength))throw Error('В списке допускается до 100 строк, каждая до '+maxLength+' символов.');return rows;}
 function blocksValue(){return [...$('blocks').children].map(block=>{const b={type:block.querySelector('.blockType').value};for(const n of block.querySelectorAll('[data-key]')){const k=n.dataset.key;b[k]=k==='items'?n.value.split('\n').map(v=>v.trim()).filter(Boolean):['level','mediaId'].includes(k)?Number(n.value):n.value;}return b;});}
 const lockedControls=new Map();
 function setControlDisabled(control,disabled){
@@ -353,6 +355,7 @@ async function openCatalog(kind,id){
         const preview=el('p');const prefix={services:'/services/',projects:'/cases/',specialists:'/outstaff/',team:'/team/'}[kind];
         const updateLink=()=>{const canonical=$('fields').querySelector('[name=canonical]')?.value;preview.textContent=canonical?'Основной адрес: '+canonical:kind==='services'?'Основной адрес не задан':'Ссылка: '+prefix+slug.value;};slug.oninput=updateLink;updateLink();$('fields').append(preview);
         field('description','Описание',entry.description,'textarea').maxLength=50000;
+        if(kind==='services'||kind==='projects')stringListField('technologies','Технологии — по одному названию на строку',entry.technologies);
         if(kind!=='team')field('price','Стоимость',entry.price).maxLength=240;
         imageField('coverMediaId',kind==='team'||kind==='specialists'?'Фотография':'Обложка',entry.cover?.id);
         imageField('mobileCoverMediaId','Изображение для мобильной версии (необязательно)',entry.mobileCover?.id);
@@ -436,6 +439,8 @@ async function openPage(slug){
         field('seoTitle','SEO: заголовок',data.seoTitle).maxLength=240;
         field('seoDescription','SEO: описание',data.seoDescription,'textarea').maxLength=1000;
         field('canonical','Канонический адрес',data.canonical).maxLength=1000;
+        stringListField('technologies','Технологии страницы — по одному названию на строку',data.technologies);
+        stringListField('categorySlugs','Категории страницы — по одному коду на строку (web, mobile, ai…)',data.categorySlugs);
         field('published','Показывать страницу',data.page.published,'checkbox');
         $('fields').append(el('h3','Блоки страницы'),el('p','Структура фиксирована. Откройте блок, чтобы изменить его содержимое. Общие блоки меняются на всех страницах.'));
         for(const block of data.blocks){
@@ -547,12 +552,15 @@ $('editForm').onsubmit=async event=>{
         }else if(catalogs[kind]){
             body={title:form.title,slug:form.slug,canonical:form.canonical,description:form.description,price:form.price||null,seoTitle:form.seoTitle,seoDescription:form.seoDescription,published:form.published,sortOrder:Number(form.sortOrder),coverMediaId:form.coverMediaId?Number(form.coverMediaId):null,categoryIds:form.categoryIds,caseIds:[],...editing.read.body()};
             body.mobileCoverMediaId=form.mobileCoverMediaId?Number(form.mobileCoverMediaId):null;
+            if(kind==='services'||kind==='projects')body.technologies=stringListValue(form.technologies);
             if(id)body.version=data.entry.version;
             url=path(kind)+(id?'/'+id:'');
         }else if(categoryKinds[kind]){
             body={name:form.name,slug:form.slug,sortOrder:Number(form.sortOrder)};if(id)body.version=data.version;url=path(kind)+(id?'/'+id:'');
         }else if(kind==='pages'){
             body={...form,version:data.page.version};url='/api/admin/pages/'+id;
+            body.technologies=stringListValue(form.technologies);
+            body.categorySlugs=stringListValue(form.categorySlugs,80);
         }else if(kind==='pageBlock'){
             body={data:editing.read.body(),published:form.published,version:data.version};url='/api/admin/pages/'+editing.owner+'/blocks/'+id;
         }else{

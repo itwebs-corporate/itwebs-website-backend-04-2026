@@ -63,6 +63,17 @@ public class CatalogService {
     @Transactional
     public EntryView save(Kind kind, Long id, EntryRequest request) {
         limits.validate(request);
+        Set<Long> categoryIds = request.categoryIds();
+        if (request.categorySlugs() != null) {
+            Set<Long> resolved = new LinkedHashSet<>();
+            for (String slug : ru.itwebs.cms.service.StringLists.normalize(request.categorySlugs()))
+                resolved.add(categories.findByKindAndSlug(kind, slug)
+                        .orElseThrow(() -> new IllegalArgumentException("Категория не найдена: " + slug)).id);
+            if (categoryIds != null && !categoryIds.equals(resolved))
+                throw new IllegalArgumentException("categoryIds и categorySlugs должны обозначать одинаковые категории");
+            categoryIds = resolved;
+        }
+        if (categoryIds == null) throw new IllegalArgumentException("Передайте categoryIds или categorySlugs, в том числе пустой список");
         CatalogEntry entry = id == null ? create(kind) : find(kind, id);
         if (id != null) version(entry.version, request.version());
         CatalogEntry duplicate = entries.findByKindAndSlug(kind, request.slug()).orElse(null);
@@ -108,8 +119,10 @@ public class CatalogService {
         }
         entry.published = request.published();
         entry.sortOrder = request.sortOrder();
+        if (request.technologies() != null)
+            entry.technologies = ru.itwebs.cms.service.StringLists.normalize(request.technologies());
         entry.categories.clear();
-        request.categoryIds().stream().sorted().forEach(categoryId -> {
+        categoryIds.stream().sorted().forEach(categoryId -> {
             CatalogCategory category = categories.findById(categoryId).filter(value -> value.kind == kind)
                     .orElseThrow(() -> new IllegalArgumentException("Категория не относится к этому каталогу"));
             entry.categories.add(category);
@@ -207,7 +220,18 @@ public class CatalogService {
                 entry.categories.stream().sorted(Comparator.comparingInt((CatalogCategory item) -> item.sortOrder).thenComparing(item -> item.id))
                         .map(this::category).toList(),
                 entry instanceof OutstaffSpecialist specialist ? specialist.body : null,
-                entry instanceof TeamMember member ? member.body : null);
+                entry instanceof TeamMember member ? member.body : null,
+                technologies(entry),
+                entry.categories.stream().sorted(Comparator.comparingInt((CatalogCategory item) -> item.sortOrder).thenComparing(item -> item.id))
+                        .map(item -> item.slug).toList());
+    }
+
+    private List<String> technologies(CatalogEntry entry) {
+        if (entry.technologies != null) return ru.itwebs.cms.service.StringLists.normalize(entry.technologies);
+        if (entry instanceof ServiceOffering service) return components.technologies(service);
+        if (entry instanceof CaseStudy project && project.body != null && project.body.stack() != null)
+            return ru.itwebs.cms.service.StringLists.normalize(project.body.stack().stream().map(Technology::name).toList());
+        return List.of();
     }
 
     private EntryView view(CatalogEntry entry, boolean published) {

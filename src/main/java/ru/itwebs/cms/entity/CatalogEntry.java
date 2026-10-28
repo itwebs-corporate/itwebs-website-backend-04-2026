@@ -1,9 +1,12 @@
 package ru.itwebs.cms.entity;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.JdbcTypeCode;
+import org.hibernate.type.SqlTypes;
 import ru.itwebs.cms.catalog.CatalogDtos.Kind;
 import java.util.LinkedHashSet;
 import java.util.Set;
+import java.util.List;
 
 @Entity
 @Inheritance(strategy = InheritanceType.JOINED)
@@ -21,6 +24,8 @@ public abstract class CatalogEntry {
     @Column(length = 1000) public String canonical;
     @Column(nullable = false) public boolean published;
     @Column(nullable = false) public int sortOrder;
+    // null preserves legacy stack-derived values; [] explicitly clears the new list.
+    @JdbcTypeCode(SqlTypes.JSON) @Column(columnDefinition = "jsonb") public List<String> technologies;
     @ManyToOne(fetch = FetchType.LAZY) public MediaAsset cover;
     @ManyToOne(fetch = FetchType.LAZY) public MediaAsset mobileCover;
     @ManyToMany

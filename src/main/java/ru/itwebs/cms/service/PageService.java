@@ -36,7 +36,8 @@ public class PageService {
     public AdminPage admin(String slug) {
         SitePage page = find(slug);
         return new AdminPage(card(page), page.seoTitle, page.seoDescription, page.canonical,
-                pageBlocks(page, false).stream().map(this::block).toList(), page.collections.stream().map(this::collection).toList());
+                pageBlocks(page, false).stream().map(this::block).toList(), page.collections.stream().map(this::collection).toList(),
+                technologies(page, false), categorySlugs(page, false));
     }
     public PageResponse published(String slug) {
         SitePage page = find(slug);
@@ -49,7 +50,31 @@ public class PageService {
         Map<Long, MediaView> images = new TreeMap<>();
         included.forEach(item -> item.images.stream().filter(image -> image.getContentType().startsWith("image/")).forEach(image -> images.put(image.getId(), new MediaView(image.getId(), "/api/media/" + image.getId(), image.getAltText()))));
         return new PageResponse(page.slug, page.path, page.title, page.seoTitle, page.seoDescription, page.canonical,
-                included.stream().map(item -> publicBlock(item)).toList(), selections, new ArrayList<>(images.values()));
+                included.stream().map(item -> publicBlock(item)).toList(), selections, new ArrayList<>(images.values()),
+                technologies(page, true), categorySlugs(page, true));
+    }
+    private List<String> technologies(SitePage page, boolean published) {
+        if (page.technologies != null) return StringLists.normalize(page.technologies);
+        List<String> names = new ArrayList<>();
+        page.blocks.stream().filter(block -> block.key.equals("technology-items") && (!published || block.published))
+                .forEach(block -> block.data.items().forEach(row -> {
+                    Value value = row.get("name");
+                    if (value != null && (!published || value.visible())) names.add(value.text());
+                }));
+        return StringLists.normalize(names);
+    }
+    private List<String> categorySlugs(SitePage page, boolean published) {
+        if (page.categorySlugs != null) return StringLists.normalize(page.categorySlugs);
+        List<String> slugs = new ArrayList<>();
+        page.collections.forEach(binding -> {
+            if (binding.allEntries) {
+                catalog.categories(binding.kind).forEach(category -> slugs.add(category.slug()));
+            } else binding.entries.stream().filter(entry -> !published || entry.published)
+                    .forEach(entry -> entry.categories.stream()
+                            .sorted(Comparator.comparingInt((CatalogCategory category) -> category.sortOrder).thenComparing(category -> category.id))
+                            .forEach(category -> slugs.add(category.slug)));
+        });
+        return StringLists.normalize(slugs);
     }
     private List<SiteBlock> pageBlocks(SitePage page, boolean published) {
         if (page.slug.equals("shared")) return page.blocks.stream().filter(item -> !published || item.published).toList();
@@ -74,6 +99,8 @@ public class PageService {
         page.seoDescription = request.seoDescription();
         page.canonical = request.canonical();
         page.published = request.published();
+        if (request.technologies() != null) page.technologies = StringLists.normalize(request.technologies());
+        if (request.categorySlugs() != null) page.categorySlugs = StringLists.normalize(request.categorySlugs());
         pages.saveAndFlush(page);
         return admin(slug);
     }
@@ -209,6 +236,7 @@ public class PageService {
         if (member != null && override.position() != null) member = new MemberContent(override.position(), member.biography());
         return new Card(card.id(), card.version(), card.kind(), override.title() == null ? card.title() : override.title(), card.slug(), card.link(),
                 override.description() == null ? card.description() : override.description(), card.price(), card.published(), card.sortOrder(),
-                cover, card.mobileCover(), card.categories(), override.specialist() == null ? card.specialist() : override.specialist(), member);
+                cover, card.mobileCover(), card.categories(), override.specialist() == null ? card.specialist() : override.specialist(), member,
+                card.technologies(), card.categorySlugs());
     }
 }

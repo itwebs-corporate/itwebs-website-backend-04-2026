@@ -9,7 +9,8 @@ from service_details_by import STAGES, FAQS, CONFIGURATION_FAQS, TECHNOLOGIES, E
 
 # Verified against https://itwebs.ru/services on 2026-10-26.
 # Current displayed amounts, excluding crossed-out previous prices; no FX conversion.
-# Three ready-made offers (32..34) have no equivalent on the RU service list.
+# Offers 32..34: user-approved BYN conversion at CBR 2026-10-27,
+# 1 BYN = 27.3499 RUB, rounded up to 10,000 RUB as requested by the user.
 RU_PRICES = {
     1: 'от 2 800 000 ₽', 2: 'от 5 000 000 ₽', 3: 'от 350 000 ₽',
     4: 'от 200 000 ₽', 5: 'от 450 000 ₽', 6: 'от 300 000 ₽',
@@ -22,6 +23,7 @@ RU_PRICES = {
     25: 'от 150 000 ₽', 26: 'от 70 000 ₽', 27: 'от 7 000 000 ₽',
     28: 'от 2 000 ₽/ч', 29: 'от 2 000 ₽/ч', 30: 'от 2 000 ₽/ч',
     31: 'от 2 000 ₽/ч',
+    32: 'от 50 000 ₽', 33: 'от 100 000 ₽', 34: 'от 110 000 ₽',
 }
 
 # title, description, concrete customer tasks. Prices use the approved RU source.
@@ -291,7 +293,7 @@ def build_manifest(source):
                 'seoTitle': title + ' — ITWEBS', 'seoDescription': excerpt}})
     result['holds'] = [
         '18 рейтингов подрядчиков и статья о законодательстве РФ не импортируются.',
-        'Цены 31 услуги взяты с itwebs.ru в RUB; у трёх готовых решений нет соответствия на RU-сайте, их price пусты.',
+        'Цены 31 услуги взяты с itwebs.ru в RUB; три готовых решения пересчитаны из BYN по согласованию, курс ЦБ РФ на 27.10.2026.',
         'FAQ и этапы адаптированы с сохранением старых ID в журнале; гарантии, количественные обещания, сроки и бесплатные предложения отложены.',
         'Полезные пояснения SEO-текстов адаптированы в описания услуг; повторы ключевых слов и неподтверждённые результаты исключены.',
         'Статьи расширены практическими разделами и списками подготовки; исходные материалы остаются в старой базе.',

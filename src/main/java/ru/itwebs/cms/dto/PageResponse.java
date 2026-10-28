@@ -8,4 +8,4 @@ import java.util.Map;
 
 public record PageResponse(String page, String path, String title, String seoTitle, String seoDescription,
                             String canonical, List<BlockView> blocks, Map<String, List<Card>> collections,
-                            List<MediaView> images) { }
+                            List<MediaView> images, List<String> technologies, List<String> categorySlugs) { }

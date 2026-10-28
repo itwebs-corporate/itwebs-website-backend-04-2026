@@ -20,7 +20,11 @@ public final class PageDtos {
     public record BlockRequest(@NotNull @Valid BlockData data, boolean published, @NotNull @PositiveOrZero Long version) { }
     public record PageRequest(@NotBlank @Size(max = 240) String title, @Size(max = 240) String seoTitle,
                               @Size(max = 1000) String seoDescription, @Size(max = 1000) String canonical,
-                              boolean published, @NotNull @PositiveOrZero Long version) { }
+                              boolean published, @NotNull @PositiveOrZero Long version,
+                              @io.swagger.v3.oas.annotations.media.Schema(description = "Технологии страницы. null сохраняет прежние данные, [] очищает список.")
+                              @Size(max = 100) List<@NotBlank @Size(max = 120) String> technologies,
+                              @io.swagger.v3.oas.annotations.media.Schema(description = "Коды категорий страницы. null сохраняет прежние данные, [] очищает список.", example = "[\"web\",\"mobile\"]")
+                              @Size(max = 100) List<@NotBlank @Size(max = 80) @Pattern(regexp = "[a-z0-9]+(?:-[a-z0-9]+)*") String> categorySlugs) { }
     public record DisplayOverride(@NotNull @Positive Long entryId, @Size(max = 240) String title,
                                    @Size(max = 50000) String description, @Size(max = 240) String position,
                                    @Size(max = 255) String imageAlt, @Valid ru.itwebs.cms.catalog.CatalogDtos.SpecialistContent specialist) {
@@ -37,5 +41,6 @@ public final class PageDtos {
     public record CollectionView(Long id, Long version, String key, ru.itwebs.cms.catalog.CatalogDtos.Kind kind,
                                  boolean allEntries, List<Long> entryIds, List<DisplayOverride> overrides) { }
     public record AdminPage(PageCard page, String seoTitle, String seoDescription, String canonical,
-                            List<BlockView> blocks, List<CollectionView> collections) { }
+                            List<BlockView> blocks, List<CollectionView> collections,
+                            List<String> technologies, List<String> categorySlugs) { }
 }

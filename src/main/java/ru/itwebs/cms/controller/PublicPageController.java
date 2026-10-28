@@ -55,6 +55,6 @@ public class PublicPageController {
     }
     private PageResponse metadata(PageResponse layout, String path, String title, String seoTitle, String seoDescription, String canonical) {
         return new PageResponse(layout.page(), path, title, seoTitle, seoDescription, canonical,
-                layout.blocks(), layout.collections(), layout.images());
+                layout.blocks(), layout.collections(), layout.images(), layout.technologies(), layout.categorySlugs());
     }
 }
